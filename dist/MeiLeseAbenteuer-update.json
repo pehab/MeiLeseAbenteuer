@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "versionCode": 2,
-  "versionName": "0.1.1",
-  "url": "https://github.com/pehab/MeiLeseAbenteuer/releases/download/v0.1.1/MeiLeseAbenteuer-0.1.1.apk",
-  "sha256": "d1a4c08d1e66dc16add4d8ac316edb504370b8fe36664a7894d94c228ba71f64",
-  "size": 185459
+  "versionCode": 3,
+  "versionName": "0.2.0",
+  "url": "https://github.com/pehab/MeiLeseAbenteuer/releases/download/v0.2.0/MeiLeseAbenteuer-0.2.0.apk",
+  "sha256": "bec7701bbade74799d3e20b6b9358dd26632510f07dee2706d956a8a43a523f0",
+  "size": 201843
 }

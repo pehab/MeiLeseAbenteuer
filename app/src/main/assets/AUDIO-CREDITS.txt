@@ -6,7 +6,7 @@ Die Lautdateien und ihre Bearbeitungen stehen unter dieser Lizenz. Zeichnungen u
 
 M: Bilabial nasal.ogg — Peter Isotalo
 https://commons.wikimedia.org/wiki/File:Bilabial_nasal.ogg
-Bearbeitung: Konsonant isoliert, verlängert und normalisiert.
+Bearbeitung: Natürliches Nasalsegment isoliert und normalisiert; keine Schleife, keine künstliche Verlängerung.
 
 A: Open front unrounded vowel.ogg — Denelson83
 https://commons.wikimedia.org/wiki/File:Open_front_unrounded_vowel.ogg
