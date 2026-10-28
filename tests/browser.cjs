@@ -40,9 +40,9 @@ const server = http.createServer((req, res) => {
   await click('#lesson-path');
   assert.equal(await page.locator('[data-chapter="1"]').isDisabled(), true);
   await click('[data-chapter="0"]');
-  async function traceForm(p, strokes) {
+  async function traceForm(p, strokes, wobbly = false) {
     for (const points of strokes) {
-      const screen = await p.locator('#trace-board').evaluate((e, pts) => pts.map(([x, y]) => { const point = e.createSVGPoint(); point.x = x; point.y = y; const q = point.matrixTransform(e.getScreenCTM()); return [q.x, q.y]; }), points);
+      const screen = await p.locator('#trace-board').evaluate((e, pts) => pts.map(([x, y]) => { const point = e.createSVGPoint(); point.x = x; point.y = y; const q = point.matrixTransform(e.getScreenCTM()); return [q.x, q.y]; }), wobbly ? points.map(([x, y]) => [x + 18, y + 17]) : points);
       await p.mouse.move(...screen[0]); await p.mouse.down();
       for (let i = 1; i < screen.length; i++) await p.mouse.move(...screen[i], { steps: Math.max(1, Math.ceil(Math.hypot(screen[i][0] - screen[i-1][0], screen[i][1] - screen[i-1][1]) / 12)) });
       await p.mouse.up();
@@ -61,13 +61,14 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('#lesson-next').isDisabled(), true);
     if (i === 0) {
       await page.screenshot({ path: path.join(output, 'letters-writing.png') });
+      assert.equal(await page.locator('.trace-goal-star').textContent(), '★');
       await click('#trace-demo'); await page.waitForTimeout(400);
       assert.equal(await page.locator('#lesson-next').isDisabled(), true, 'watching the demonstration does not solve the exercise');
       await page.reload(); await page.waitForSelector('#game[data-ready=true]'); await click('#begin');
       assert.equal(await page.locator('#lesson').getAttribute('data-step'), 'writeUpper', 'resume the exercise after a restart');
     }
-    await traceForm(page, letter.upperStrokes); await click('#lesson-next');
-    await traceForm(page, letter.lowerStrokes); await click('#lesson-next');
+    await traceForm(page, letter.upperStrokes, true); await click('#lesson-next');
+    await traceForm(page, letter.lowerStrokes, true); await click('#lesson-next');
     assert.equal(await page.locator('#lesson').getAttribute('data-step'), 'reward');
     assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('forest-letters-1')).completed), i + 1);
     await click('#lesson-next');
@@ -125,12 +126,26 @@ const server = http.createServer((req, res) => {
     const { page: p, context: c } = await game(width, height);
     await p.locator('#begin').click(); await p.locator('#lesson-next').click();
     await p.locator('[data-answer=A]').click(); await p.locator('[data-answer=a]').click();
+    if (label === 'portrait') {
+      const partial = await p.locator('#trace-board').evaluate(e => [[65,195],[105,118],[132,65]].map(([x,y]) => {const q=e.createSVGPoint();q.x=x+15;q.y=y+12;const v=q.matrixTransform(e.getScreenCTM());return [v.x,v.y];}));
+      await p.mouse.move(...partial[0]); await p.mouse.down();
+      for (const point of partial.slice(1)) await p.mouse.move(...point, {steps:10});
+      await p.mouse.up();
+      const mark = await p.locator('.trace-start').getAttribute('cy'); assert.ok(Number(mark) < 150, 'lifting keeps the completed part of the A');
+      const resume = await p.locator('#trace-board').evaluate(e => {const m=e.querySelector('.trace-start'),q=e.createSVGPoint();q.x=Number(m.getAttribute('cx'));q.y=Number(m.getAttribute('cy'));const v=q.matrixTransform(e.getScreenCTM());return [v.x,v.y];});
+      await p.mouse.move(...resume); await p.mouse.down();
+      const finish = await p.locator('#trace-board').evaluate(e => [[150,30],[235,195]].map(([x,y])=>{const q=e.createSVGPoint();q.x=x+15;q.y=y+12;const v=q.matrixTransform(e.getScreenCTM());return [v.x,v.y];}));
+      for (const point of finish) await p.mouse.move(...point, {steps:20});
+      await p.mouse.up();
+      assert.match(await p.locator('#trace-count').textContent(), /Spur 2/, 'the destination confirms the first A stroke automatically');
+      await p.locator('#trace-reset').click();
+    }
     const box = await p.locator('#trace-board').boundingBox();
     assert.ok(box.x >= 0 && box.y >= 0 && box.x + box.width <= width + 1 && box.y + box.height <= height + 1);
     for (const id of ['trace-demo', 'trace-reset']) { const control = await p.locator('#' + id).boundingBox(); assert.ok(control.y >= 0 && control.y + control.height < height, 'writing help stays on screen'); assert.equal(await p.locator('#' + id).evaluate(e => e.getBoundingClientRect().bottom <= document.getElementById('lesson-body').getBoundingClientRect().bottom + 1), true, 'writing help is not clipped by its panel'); }
     await p.screenshot({ path: path.join(output, `letters-${label}.png`) });
-    await traceForm(p, letters[0].upperStrokes); await p.locator('#lesson-next').click();
-    await traceForm(p, letters[0].lowerStrokes); await p.locator('#lesson-next').click();
+    await traceForm(p, letters[0].upperStrokes, true); await p.locator('#lesson-next').click();
+    await traceForm(p, letters[0].lowerStrokes, true); await p.locator('#lesson-next').click();
     await p.reload(); await p.waitForSelector('#game[data-ready=true]'); await p.locator('#begin').click();
     assert.equal(await p.locator('#lesson').getAttribute('data-step'), 'reward');
     await c.close();

@@ -86,3 +86,34 @@ test('Round letters guide counterclockwise and the n/m downstrokes begin at the 
     assert.ok(stem[0][1] < stem[1][1]);
   }
 });
+
+test('All sixteen forms tolerate finger-sized deviations rather than only a perfect centre line', () => {
+  for (const letter of letters) for (const form of ['upperStrokes', 'lowerStrokes']) {
+    const trace = new Trace(letter[form]);
+    for (const points of trace.strokes) {
+      assert.equal(trace.begin(points[0][0] + 18, points[0][1] + 17), true);
+      for (const [x, y] of points) assert.equal(trace.move(x + 18, y + 17), true, letter.upper + ' ' + form);
+      assert.equal(trace.end(), true, letter.upper + ' ' + form);
+    }
+    assert.equal(trace.done, true);
+  }
+});
+
+test('A child can lift halfway, resume, go off the path, and return without losing progress', () => {
+  const trace = new Trace(letters[0].upperStrokes), points = trace.strokes[0];
+  trace.begin(...points[0]);
+  for (const point of points.slice(0, 35)) trace.move(...point);
+  const cursor = trace.cursor; assert.ok(cursor > 20);
+  assert.equal(trace.end(), false); assert.equal(trace.cursor, cursor);
+  assert.equal(trace.begin(...trace.target), true);
+  assert.equal(trace.move(0, 0), false); assert.ok(trace.cursor >= cursor);
+  const resume = trace.cursor;
+  trace.cancel(); assert.equal(trace.begin(...trace.target), true);
+  for (const point of points.slice(resume)) trace.move(...point);
+  assert.equal(trace.end(), true);
+  assert.equal(trace.stroke, 1);
+  const bar = trace.strokes[1]; trace.begin(...bar[0]);
+  for (const point of bar.slice(0, -2)) trace.move(point[0], point[1] + 20);
+  assert.equal(trace.end(), true, 'the end star has a forgiving hit area');
+  assert.equal(trace.done, true);
+});

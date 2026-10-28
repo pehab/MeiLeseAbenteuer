@@ -39,7 +39,7 @@ public final class SmokeInstrumentation extends Instrumentation {
     }
     private void traceLetter(boolean lower) throws Exception {
         String form = lower ? "lowerStrokes" : "upperStrokes";
-        String script = "(() => {const b=document.getElementById('trace-board'); const r=" + web.getWidth() + "/document.documentElement.clientWidth; const item=ForestLetters.letters[Number(document.getElementById('lesson').dataset.index)];return item." + form + ".map(s=>ForestLetters.sample(s,8).map(v=>{const p=b.createSVGPoint();p.x=v[0];p.y=v[1];const q=p.matrixTransform(b.getScreenCTM());return [q.x*r,q.y*r];}));})()";
+        String script = "(() => {const b=document.getElementById('trace-board'); const r=" + web.getWidth() + "/document.documentElement.clientWidth; const item=ForestLetters.letters[Number(document.getElementById('lesson').dataset.index)];return item." + form + ".map(s=>ForestLetters.sample(s,8).map(v=>{const p=b.createSVGPoint();p.x=v[0]+18;p.y=v[1]+17;const q=p.matrixTransform(b.getScreenCTM());return [q.x*r,q.y*r];}));})()";
         JSONArray strokes = new JSONArray(js(script));
         int[] location = new int[2]; runOnMainSync(() -> web.getLocationOnScreen(location));
         for (int s = 0; s < strokes.length(); s++) {
@@ -55,7 +55,7 @@ public final class SmokeInstrumentation extends Instrumentation {
                     (float) point.getDouble(0) + location[0], (float) point.getDouble(1) + location[1], 0);
             sendPointerSync(up); up.recycle(); Thread.sleep(80);
         }
-        check("true".equals(js("!document.getElementById('lesson-next').disabled")), "real Android touch completes " + form);
+        check("true".equals(js("!document.getElementById('lesson-next').disabled")), "imperfect Android touch completes " + form);
     }
     private void learnLetters() throws Exception {
         click("#begin"); await("!document.getElementById('lesson').hidden");

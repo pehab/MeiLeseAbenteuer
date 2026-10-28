@@ -40,12 +40,18 @@ window.createLetterJourney = function (hooks) {
       if (i >= trace.stroke) board.append(node('path', { d: path(points), fill: 'none', stroke: '#b49a65', 'stroke-width': 2, 'stroke-dasharray': '2 7' }));
     });
     if (!trace.done) {
-      const start = trace.strokes[trace.stroke][0];
+      const points = trace.strokes[trace.stroke], start = trace.target, finish = points[points.length - 1];
+      if (trace.cursor > 0) board.append(node('path', { d: path(points.slice(0, trace.cursor + 1)), fill: 'none', stroke: '#51835b', 'stroke-width': 18, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+      // The star is always the current stroke's destination; on round letters it surrounds the start.
+      board.append(node('circle', { cx: finish[0], cy: finish[1], r: 20, fill: '#fff3bd', stroke: '#a87822', 'stroke-width': 2, class: 'trace-goal' }));
+      const shared = Math.hypot(start[0] - finish[0], start[1] - finish[1]) < 35;
+      const star = node('text', { x: finish[0] + (shared ? 28 : 0), y: finish[1] + 7, 'text-anchor': 'middle', fill: '#986a18', 'font-size': 23, 'pointer-events': 'none', class: 'trace-goal-star' });
+      star.textContent = '★'; board.append(star);
       board.append(node('circle', { cx: start[0], cy: start[1], r: 13, fill: '#365e42', class: 'trace-start' }));
       const number = node('text', { x: start[0], y: start[1] + 4, 'text-anchor': 'middle', fill: '#fff7de', 'font-size': 12, 'font-family': 'sans-serif', 'pointer-events': 'none' });
       number.textContent = trace.stroke + 1; board.append(number);
     }
-    $('trace-count').textContent = `Spur ${Math.min(trace.stroke + 1, trace.strokes.length)} von ${trace.strokes.length}`;
+    $('trace-count').textContent = trace.done ? 'Alle Spuren geschafft!' : `Spur ${trace.stroke + 1} von ${trace.strokes.length} · bis zum ★`;
     $('lesson-next').disabled = !trace.done;
   }
   function render() {
@@ -65,8 +71,8 @@ window.createLetterJourney = function (hooks) {
       meet: 'Hör hin und schau dir beide Formen an. Groß und klein gehören zusammen.',
       find: 'Finde den gleichen großen Buchstaben. Tippe auf seine Spur.',
       pair: 'Welcher kleine Buchstabe gehört dazu? Du hast die beiden schon zusammen gesehen.',
-      writeUpper: 'Schreibe den großen Buchstaben. Beginne am grünen Punkt. Folge der Spur bis zum Ende. Bei einer neuen Zahl setzt du neu an.',
-      writeLower: 'Jetzt der kleine Buchstabe. Beginne wieder am grünen Punkt und folge der Spur.',
+      writeUpper: 'Beginne am grünen Punkt und fahre zum goldenen Stern. Du darfst absetzen und am grünen Punkt weitermachen. Bei einer neuen Zahl folgt die nächste Spur.',
+      writeLower: 'Jetzt der kleine Buchstabe: vom grünen Punkt zum goldenen Stern. Wenn du absetzt, bleibt dein Weg grün.',
       reward: letter.reward
     };
     $('lesson-next').innerHTML = step === 'reward' ? (lessons.index === 7 ? 'Zur Sternenpost' : 'Weiter auf dem Waldweg') + ' <span>➜</span>' : step === 'meet' ? 'Buchstaben entdecken <span>➜</span>' : 'Weiter <span>➜</span>';
@@ -95,6 +101,7 @@ window.createLetterJourney = function (hooks) {
       drawGuide();
     }
     if (step === 'reward') { pair($('reward-pair')); $('letter-reward-text').textContent = letter.reward; hooks.chime(true); }
+    if (lessons.index === 0 && step === 'writeUpper') hints[step] = 'Zuerst vom grünen Punkt über die Spitze zum goldenen Stern. Danach kommt der Querstrich. Du darfst zwischendurch absetzen.';
     $('lesson-feedback').textContent = hints[step];
     speak(step === 'meet' ? letter.story + ' ' + hints[step] : hints[step]);
     hooks.travel(lessons.index);
@@ -153,14 +160,23 @@ window.createLetterJourney = function (hooks) {
   board.onpointermove = e => {
     if (drawing !== e.pointerId) return;
     e.preventDefault(); const p = coords(e);
-    if (!trace.move(...p)) { drawing = null; drawGuide(); $('lesson-feedback').textContent = 'Bleibe auf dem hellen Weg. Starte diese Spur noch einmal.'; return; }
+    const near = trace.move(...p);
+    if (finishStroke()) return;
+    if (!near) { $('lesson-feedback').textContent = 'Dein Weg bleibt gespeichert. Gehe zurück zur grünen Spur und dann weiter zum Stern.'; return; }
     const ink = board.querySelector('.trace-ink'); if (ink) ink.setAttribute('d', ink.getAttribute('d') + ` L${p.join(',')}`);
   };
+  function finishStroke() {
+    if (!trace.reachedEnd || !trace.end()) return false;
+    drawing = null; drawGuide(); hooks.chime(trace.done);
+    const message = trace.done ? 'Geschafft! Alle Spuren leuchten. Tippe auf Weiter.' : 'Stern erreicht! Setze für die nächste Spur am grünen Punkt neu an.';
+    $('lesson-feedback').textContent = message; speak(message); return true;
+  }
   board.onpointerup = e => {
     if (drawing !== e.pointerId) return;
-    drawing = null; const valid = trace.move(...coords(e)) && trace.end(); drawGuide();
-    $('lesson-feedback').textContent = valid ? trace.done ? 'Geschafft! Dein Buchstabe leuchtet. Tippe auf den Pfeil.' : 'Gut! Setze am nächsten grünen Punkt neu an.' : 'Versuche diese Spur noch einmal vom grünen Punkt bis zum Ende.';
-    if (valid) { hooks.chime(trace.done); if (trace.done) speak('Dein Buchstabe leuchtet! Weiter mit dem Pfeil.'); }
+    trace.move(...coords(e));
+    if (finishStroke()) return;
+    drawing = null; trace.end(); drawGuide();
+    $('lesson-feedback').textContent = 'Du kannst absetzen. Mache am grünen Punkt weiter bis zum goldenen Stern.';
   };
   board.onpointercancel = () => { if (trace) trace.cancel(); drawing = null; if (trace) drawGuide(); };
   return {

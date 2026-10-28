@@ -82,35 +82,45 @@
     constructor(strokes) { this.strokes = strokes.map(p => sample(p)); this.stroke = 0; this.cursor = 0; this.down = false; this.last = null; }
     get done() { return this.stroke === this.strokes.length; }
     get target() { return this.done ? null : this.strokes[this.stroke][this.cursor]; }
+    get reachedEnd() {
+      if (this.done || !this.last) return false;
+      const points = this.strokes[this.stroke];
+      return (points.length <= 2 || this.cursor >= Math.max(Math.ceil((points.length - 1) * .8), points.length - 9)) && Math.hypot(this.last[0] - points[points.length - 1][0], this.last[1] - points[points.length - 1][1]) <= 36;
+    }
     begin(x, y) {
-      if (this.done) return false;
-      this.cursor = 0;
-      if (Math.hypot(x - this.target[0], y - this.target[1]) > 18) return false;
+      if (this.done || !Number.isFinite(x) || !Number.isFinite(y)) return false;
+      // A child may lift their finger and continue at the glowing progress marker.
+      if (Math.hypot(x - this.target[0], y - this.target[1]) > 42) return false;
       this.down = true; this.last = [x, y]; return true;
     }
     move(x, y) {
       if (!this.down || this.done || !Number.isFinite(x) || !Number.isFinite(y)) return false;
-      const points = this.strokes[this.stroke];
-      const count = Math.max(1, Math.ceil(Math.hypot(x - this.last[0], y - this.last[1]) / 4));
-      // Huge jumps and off-trail scribbles never finish a stroke.
-      if (count > 150) { this.cancel(); return false; }
-      const from = this.last;
+      const points = this.strokes[this.stroke], from = this.last;
+      const count = Math.max(1, Math.ceil(Math.hypot(x - from[0], y - from[1]) / 4));
+      this.last = [x, y];
+      if (count > 150) return false;
+      let onTrail = true;
       for (let n = 1; n <= count; n++) {
         const p = [from[0] + (x - from[0]) * n / count, from[1] + (y - from[1]) * n / count];
-        const near = points.slice(Math.max(0, this.cursor - 3), Math.min(points.length, this.cursor + 5));
-        if (!near.some(q => Math.hypot(p[0] - q[0], p[1] - q[1]) <= 21)) { this.cancel(); return false; }
-        while (this.cursor < points.length - 1 && Math.hypot(p[0] - points[this.cursor + 1][0], p[1] - points[this.cursor + 1][1]) <= 10) this.cursor++;
+        let closest = this.cursor, distance = Infinity;
+        // Search a short section ahead, never the whole letter: crossings and closed loops cannot skip the route.
+        for (let i = Math.max(0, this.cursor - 5); i < Math.min(points.length, this.cursor + 15); i++) {
+          const d = Math.hypot(p[0] - points[i][0], p[1] - points[i][1]);
+          if (d < distance) { distance = d; closest = i; }
+        }
+        if (distance > 42) { onTrail = false; continue; }
+        this.cursor = Math.max(this.cursor, closest);
       }
-      this.last = [x, y]; return true;
+      return onTrail;
     }
     end() {
       if (!this.down) return false;
       this.down = false;
-      const points = this.strokes[this.stroke];
-      if (this.cursor < points.length - 2 || Math.hypot(this.last[0] - points[points.length - 1][0], this.last[1] - points[points.length - 1][1]) > 18) { this.cursor = 0; return false; }
-      this.stroke++; this.cursor = 0; return true;
+      if (!this.reachedEnd) return false;
+      this.stroke++; this.cursor = 0; this.last = null; return true;
     }
-    cancel() { this.down = false; this.cursor = 0; this.last = null; }
+    // Going off the trail or lifting never erases the part already completed.
+    cancel() { this.down = false; this.last = null; }
   }
   const api = { letters, Lessons, Trace, sample };
   if (typeof module !== 'undefined') module.exports = api; else root.ForestLetters = api;
