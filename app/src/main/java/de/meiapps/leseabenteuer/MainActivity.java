@@ -90,7 +90,7 @@ public final class MainActivity extends Activity {
     private void toy(LinearLayout parent,String description,String caption,String art,int color,Runnable action){
         LinearLayout tile=column();tile.setGravity(Gravity.CENTER);tile.setPadding(dp(8),dp(8),dp(8),dp(10));tile.setBackground(bg(color,0));
         tile.addView(new PlayArt(this,art,0),new LinearLayout.LayoutParams(dp(80),dp(72)));TextView text=label(caption,18,INK);bold(text);tile.addView(text);
-        tile.setContentDescription(description);tile.setFocusable(true);tile.setOnClickListener(v->{tile.animate().scaleX(.94f).scaleY(.94f).setDuration(80).withEndAction(action).start();});
+        tile.setContentDescription(description);tile.setFocusable(true);tile.setOnClickListener(v->action.run());
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(116),1);if(parent.getChildCount()>0)lp.setMarginStart(dp(10));parent.addView(tile,lp);
     }
     private void album(){

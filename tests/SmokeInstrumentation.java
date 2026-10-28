@@ -41,7 +41,9 @@ public final class SmokeInstrumentation extends Instrumentation {
         check(progress.stars()==0,"fresh installation has no rewards");screenshot("home.png");
         String[] names={"Laute lauschen","Bildersuche","Laute verbinden","Wörter entdecken","Buchstabenpaare","Mengen zählen","Zahlen finden"};
         for(int mode=0;mode<names.length;mode++){
-            tap(names[mode]);Learning.Question q=(Learning.Question)field("question");check(q.mode.ordinal()==mode,"requested game opens");
+            tap(names[mode]);Learning.Question q=null;
+            for(int attempt=0;attempt<100;attempt++){waitForIdleSync();q=(Learning.Question)field("question");if(q!=null&&q.mode.ordinal()==mode)break;Thread.sleep(50);}
+            check(q!=null&&q.mode.ordinal()==mode,"requested game opens after the accessibility action");
             Learning.Round round=(Learning.Round)field("round");
             tap("Aufgabe noch einmal hören");check(!round.assisted,"repeat is independent and does not expose the solution");
             if(mode==2||mode==3){tap("Hilf mir: gemeinsam lösen");check(round.assisted&&(Boolean)field("hint"),"help reveals the solution and marks the attempt assisted");}
