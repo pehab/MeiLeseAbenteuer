@@ -127,6 +127,7 @@ const server = http.createServer((req, res) => {
     await p.locator('[data-answer=A]').click(); await p.locator('[data-answer=a]').click();
     const box = await p.locator('#trace-board').boundingBox();
     assert.ok(box.x >= 0 && box.y >= 0 && box.x + box.width <= width + 1 && box.y + box.height <= height + 1);
+    for (const id of ['trace-demo', 'trace-reset']) { const control = await p.locator('#' + id).boundingBox(); assert.ok(control.y >= 0 && control.y + control.height < height, 'writing help stays on screen'); assert.equal(await p.locator('#' + id).evaluate(e => e.getBoundingClientRect().bottom <= document.getElementById('lesson-body').getBoundingClientRect().bottom + 1), true, 'writing help is not clipped by its panel'); }
     await p.screenshot({ path: path.join(output, `letters-${label}.png`) });
     await traceForm(p, letters[0].upperStrokes); await p.locator('#lesson-next').click();
     await traceForm(p, letters[0].lowerStrokes); await p.locator('#lesson-next').click();
