@@ -99,10 +99,10 @@ public final class MainActivity extends Activity {
         if(announce)voice.say(instruction,()->{if(!screen.equals("game"))return;if(mode==Learning.Mode.LISTEN||mode==Learning.Mode.INITIAL)voice.sound(question.target);});
     }
     private void prompt(){if(question==null||!screen.equals("game"))return;if(mode==Learning.Mode.READ){help();return;}if(mode==Learning.Mode.BLEND){voice.sound(question.target.substring(0,1),()->voice.sound(question.target.substring(1),()->voice.say(question.target.toLowerCase(Locale.GERMAN))));}else voice.sound(question.target);}
-    private void help(){if(round.locked)return;round.assisted=true;hint=true;highlight();feedback.setText("Wir machen es zusammen. Schau auf das goldene Feld.");if(mode==Learning.Mode.READ)voice.say(question.target);else if(mode==Learning.Mode.BLEND)prompt();else voice.sound(question.target);}
+    private void help(){if(round.locked)return;round.assisted=true;hint=true;highlight();feedback.setText(R.string.help_together);if(mode==Learning.Mode.READ)voice.say(question.target);else if(mode==Learning.Mode.BLEND)prompt();else voice.sound(question.target);}
     private void highlight(){for(int i=0;i<question.options.size();i++)if(question.options.get(i).equals(question.target))answers.get(i).setBackground(bg(0xffffe5a1,0xffd7aa52));}
     private void answer(String option,View tile){
-        if(round.locked)return;boolean correct=option.equals(question.target);if(!round.answer(correct)){tile.setBackground(bg(0xffffead9,0xffe8ba8d));feedback.setText("Hör noch einmal hin. Wir probieren es zusammen.");voice.say("Fast! Wir probieren es noch einmal.");return;}
+        if(round.locked)return;boolean correct=option.equals(question.target);if(!round.answer(correct)){tile.setBackground(bg(0xffffead9,0xffe8ba8d));feedback.setText(R.string.try_together);voice.say("Fast! Wir probieren es noch einmal.");return;}
         progress.record(question.key,round.assisted);tile.setBackground(bg(0xffd3e8c7,GREEN));for(View answer:answers)answer.setEnabled(false);feedback.setText(round.assisted?"Gemeinsam geschafft!":"Prima, das passt!");feedback.setTextColor(GREEN);next.setText(round.finished()?"Mein Abenteuerstern":"Weiter →");next.setVisibility(View.VISIBLE);
         String result=mode==Learning.Mode.READ?question.target+". Das hast du geschafft!":mode==Learning.Mode.INITIAL?Learning.sound(question.target).example+". Das passt!":"Prima, das passt!";voice.say(result);next.requestFocus();scroll.post(()->scroll.smoothScrollTo(0,content.getHeight()));
     }
