@@ -9,3 +9,5 @@ Jeder geschaffte Buchstabe öffnet das nächste Kapitel. Bereits geöffnete Kapi
 Sieben vorhandene Lautaufnahmen werden gebündelt offline abgespielt. E und die Erzähltexte verwenden die installierte deutsche Offline-Stimme. Der Lautknopf spricht bei M, N und L den aufgenommenen Laut statt des Buchstabennamens. Ausschließlich die vorhandenen Bilddateien werden verwendet. Neue Buchstabenformen, Schreibspuren und Effekte werden im Spiel gezeichnet.
 
 Der geschützte Erwachsenenbereich erklärt die Übungen und kann Buchstabenpfad und Sternenpost gemeinsam neu starten. Paketname und ursprüngliche Signatur bleiben gleich. Der öffentliche Update-Feed bleibt für diese Testfassung unverändert.
+
+Die Wortgeschichte nach dem Buchstabenpfad verwendet einen neuen Speicherplatz. Ein fertiger 0.4-Teststand überspringt weder die Buchstaben noch die erste Sternenpost dieser Lernfolge; die gespeicherten Daten der alten Testfassung werden dabei nicht verändert.

@@ -11,7 +11,7 @@
   document.body.classList.toggle('no-flex-gap', flexProbe.scrollHeight !== 3);
   flexProbe.remove();
   let restored;
-  try { restored = JSON.parse(host ? host.load() : localStorage.getItem('forest-chapter-1')); } catch (_) { restored = null; }
+  try { restored = JSON.parse(host ? host.load() : localStorage.getItem('forest-chapter-2')); } catch (_) { restored = null; }
   const story = new Story(restored);
   let started = false, modal = false, busy = false, muted = false, paused = false, lastSpeech = '', audio, walking = null;
   let foxX = 450, foxY = 800, camera = 0, targetCamera = 0, scale = 1, viewWidth = 1600, lastFrame = 0;
@@ -33,7 +33,7 @@
   }
   function save() {
     const value = story.save();
-    try { if (host) host.save(value); else localStorage.setItem('forest-chapter-1', value); }
+    try { if (host) host.save(value); else localStorage.setItem('forest-chapter-2', value); }
     catch (_) { toast('Der Spielstand konnte nicht gespeichert werden.'); }
   }
   function say(text) {

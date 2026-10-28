@@ -75,3 +75,14 @@ test('Completed strokes survive a mistake on a later stroke; a dot is a valid se
   trace.begin(...trace.target); trace.move(...trace.target); assert.equal(trace.end(), true);
   assert.equal(trace.done, true);
 });
+
+test('Round letters guide counterclockwise and the n/m downstrokes begin at the top', () => {
+  for (const form of ['upperStrokes', 'lowerStrokes']) {
+    const points = letters[3][form][0];
+    assert.ok(points[1][0] < points[0][0]);
+  }
+  for (const index of [5, 6]) {
+    const stem = letters[index].lowerStrokes[0];
+    assert.ok(stem[0][1] < stem[1][1]);
+  }
+});

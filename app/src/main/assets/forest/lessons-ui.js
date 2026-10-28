@@ -29,7 +29,7 @@ window.createLetterJourney = function (hooks) {
     // E is a vowel and uses the German offline voice; the other seven are existing recordings.
     if (key === 'e') { hooks.say('E'); return; }
     phoneme = new Audio('sounds/' + key + '.ogg');
-    phoneme.play().catch(() => speak('Der Laut konnte nicht abgespielt werden. Bitte im Erwachsenenbereich die Stimme prüfen.'));
+    phoneme.play().catch(error => { if (error.name !== 'AbortError') speak('Der Laut konnte nicht abgespielt werden. Bitte im Erwachsenenbereich die Stimme prüfen.'); });
   }
   function cancelDemo() { demonstration++; board.querySelector('.trace-demo-dot')?.remove(); }
   function drawGuide() {

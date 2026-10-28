@@ -2,7 +2,7 @@
 (function (root) {
   'use strict';
   function curve(points) { return points; }
-  function oval(cx, cy, rx, ry, start = -Math.PI / 2, end = Math.PI * 1.5) {
+  function oval(cx, cy, rx, ry, start = -Math.PI / 2, end = -Math.PI * 2.5) {
     return Array.from({ length: 49 }, (_, i) => [cx + Math.cos(start + (end - start) * i / 48) * rx, cy + Math.sin(start + (end - start) * i / 48) * ry]);
   }
   const letters = [
@@ -10,7 +10,7 @@
       story: 'Nila hat ein Tor aus Zweigen gebaut. Zwei schräge Äste und ein kleiner Querast: Hier wartet dein erster Buchstabe.',
       reward: 'Das Tor leuchtet. Der erste Buchstabe begleitet dich!',
       upperStrokes: [[[65, 195], [150, 30], [235, 195]], [[105, 120], [195, 120]]],
-      lowerStrokes: [oval(140, 140, 55, 55, 0, Math.PI * 2), [[195, 85], [195, 195]]] },
+      lowerStrokes: [oval(140, 140, 55, 55, 0, -Math.PI * 2), [[195, 85], [195, 195]]] },
     { upper: 'E', lower: 'e', title: 'Drei Äste für Nila', animal: 1,
       story: 'Am Tor fehlen drei kleine Äste. Nila sammelt sie mit dir. Aus einem langen und drei kurzen Ästen entsteht ein neuer Buchstabe.',
       reward: 'Die Äste sitzen fest. Zwei Buchstaben leuchten am Tor.',
@@ -34,12 +34,12 @@
       story: 'Der Fuchs entdeckt zwei Spitzen und zwei kleine Hügel. Ein Buchstabe kann groß und klein ganz verschieden aussehen. Schau genau hin.',
       reward: 'Auf beiden Hügeln leuchtet ein Stern. Der Fuchs nimmt deinen Buchstaben mit.',
       upperStrokes: [[[65, 195], [65, 30], [150, 140], [235, 30], [235, 195]]],
-      lowerStrokes: [[[60, 195], [60, 90]], [[60, 130], [72, 105], [90, 88], [111, 88], [130, 101], [140, 126], [140, 195]], [[140, 130], [153, 103], [174, 88], [196, 88], [217, 103], [225, 128], [225, 195]]] },
+      lowerStrokes: [[[60, 90], [60, 195]], [[60, 130], [72, 105], [90, 88], [111, 88], [130, 101], [140, 126], [140, 195]], [[140, 130], [153, 103], [174, 88], [196, 88], [217, 103], [225, 128], [225, 195]]] },
     { upper: 'N', lower: 'n', title: 'Eine Brücke im Moos', animal: 4,
       story: 'Im Moos fehlt eine kleine Brücke. Der große Buchstabe hat einen schrägen Weg, der kleine einen runden Bogen. Baue beide mit deinem Finger.',
       reward: 'Die Moosbrücke ist fertig. Jetzt kommt jeder kleine Waldbewohner hinüber.',
       upperStrokes: [[[80, 195], [80, 30], [220, 195], [220, 30]]],
-      lowerStrokes: [[[95, 195], [95, 90]], [[95, 135], [110, 105], [135, 88], [160, 88], [186, 102], [200, 130], [200, 195]]] },
+      lowerStrokes: [[[95, 90], [95, 195]], [[95, 135], [110, 105], [135, 88], [160, 88], [186, 102], [200, 130], [200, 195]]] },
     { upper: 'L', lower: 'l', title: 'Ein Licht für die Post', animal: 1,
       story: 'Nila stellt eine Laterne an den Weg. Ein langer Stab und ein Fuß: Den großen Buchstaben findest du hier. Der kleine ist ein langer Strich.',
       reward: 'Alle acht Buchstaben leuchten! Nila hat jetzt eine besondere Nachricht für dich.',

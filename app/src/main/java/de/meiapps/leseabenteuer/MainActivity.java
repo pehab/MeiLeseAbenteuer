@@ -162,7 +162,7 @@ public final class MainActivity extends Activity {
                         catch (android.content.ActivityNotFoundException e) { Toast.makeText(this, "Bitte eine deutsche Offline-Stimme in den Android-Spracheinstellungen installieren.", Toast.LENGTH_LONG).show(); }
                     } else if (n == 2) updates.settings();
                     else new AlertDialog.Builder(this).setTitle("Waldabschnitt neu beginnen?").setMessage("Die acht Buchstabenkapitel, die Sternenpost und die drei Glühwürmchen beginnen von vorn.")
-                            .setNegativeButton("Abbrechen", null).setPositiveButton("Neu beginnen", (x, y) -> { preferences.edit().remove("chapter").remove("letters").apply(); web.reload(); }).show();
+                            .setNegativeButton("Abbrechen", null).setPositiveButton("Neu beginnen", (x, y) -> { preferences.edit().remove("chapter-after-letters").remove("letters").apply(); web.reload(); }).show();
                 });
     }
     final class ForestBridge {
@@ -179,7 +179,7 @@ public final class MainActivity extends Activity {
                 preferences.edit().putString("letters", new JSONObject().put("version", 1).put("completed", completed).put("index", index).put("step", step).toString()).apply();
             } catch (JSONException ignored) { /* Keep the last valid lesson save. */ }
         }
-        @JavascriptInterface public String load() { return preferences.getString("chapter", "{}"); }
+        @JavascriptInterface public String load() { return preferences.getString("chapter-after-letters", "{}"); }
         @JavascriptInterface public void save(String value) {
             if (value == null || value.length() > 4096) return;
             try {
@@ -192,7 +192,7 @@ public final class MainActivity extends Activity {
                 JSONObject sourceHelp = input.optJSONObject("helped");
                 JSONObject help = new JSONObject().put("river", sourceHelp != null && sourceHelp.optBoolean("river")).put("treehouse", sourceHelp != null && sourceHelp.optBoolean("treehouse"));
                 String normalized = new JSONObject().put("version", 1).put("phase", phase).put("found", clean).put("helped", help).toString();
-                preferences.edit().putString("chapter", normalized).apply();
+                preferences.edit().putString("chapter-after-letters", normalized).apply();
             } catch (JSONException ignored) { /* An invalid document never replaces a valid save. */ }
         }
         @JavascriptInterface public boolean isMuted() { return preferences.getBoolean("muted", false); }

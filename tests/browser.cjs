@@ -10,7 +10,7 @@ const output = path.resolve('build'); fs.mkdirSync(output, { recursive: true });
 const server = http.createServer((req, res) => {
   const file = path.resolve(root, '.' + decodeURIComponent(new URL(req.url, 'http://localhost').pathname));
   if (!file.startsWith(root + path.sep)) { res.writeHead(403).end(); return; }
-  const mime = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.webp': 'image/webp' };
+  const mime = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.webp': 'image/webp', '.ogg': 'audio/ogg' };
   fs.readFile(file, (err, data) => { if (err) res.writeHead(404).end(); else { res.setHeader('Content-Type', mime[path.extname(file)] || 'application/octet-stream'); res.end(data); } });
 });
 (async () => {
@@ -24,12 +24,15 @@ const server = http.createServer((req, res) => {
     await page.route('**/*', route => { assert.ok(route.request().url().startsWith(`http://127.0.0.1:${server.address().port}/`), 'all resources are offline and bundled'); return route.continue(); });
     await page.goto(url); await page.waitForSelector('#game[data-ready=true]');
     assert.equal(await page.locator('#viewport').evaluate(e => e.clientWidth > 100 && e.clientHeight > 100), true, 'world is visibly laid out');
-    if (seed) { await page.evaluate(value => { localStorage.setItem('forest-chapter-1', JSON.stringify(value)); localStorage.setItem('forest-letters-1', JSON.stringify({ version: 1, completed: 8, index: 7, step: 'reward' })); }, seed); await page.reload(); await page.waitForSelector('#game[data-ready=true]'); }
+    if (seed) { await page.evaluate(value => { localStorage.setItem('forest-chapter-2', JSON.stringify(value)); localStorage.setItem('forest-letters-1', JSON.stringify({ version: 1, completed: 8, index: 7, step: 'reward' })); }, seed); await page.reload(); await page.waitForSelector('#game[data-ready=true]'); }
     return { page, context };
   }
   const { page, context } = await game(1280, 800);
   const click = async selector => page.locator(selector).click();
   const phase = async () => page.locator('#game').getAttribute('data-phase');
+  await page.evaluate(() => localStorage.setItem('forest-chapter-1', JSON.stringify({ version: 1, phase: 'complete', found: [0, 1, 2] })));
+  await page.reload(); await page.waitForSelector('#game[data-ready=true]');
+  assert.equal(await phase(), 'meeting', 'a finished 0.4 prototype does not skip the new story');
   await page.screenshot({ path: path.join(output, 'forest-intro.png') });
   await click('#begin');
   await page.locator('#lesson').waitFor({ state: 'visible' });
@@ -78,10 +81,10 @@ const server = http.createServer((req, res) => {
   await click('[data-choice=lamp]'); assert.equal(await phase(), 'river');
   assert.match(await page.locator('#feedback').textContent(), /noch einmal/);
   await click('#puzzle-repeat');
-  const beforeHelp = await page.evaluate(() => JSON.parse(localStorage.getItem('forest-chapter-1')));
+  const beforeHelp = await page.evaluate(() => JSON.parse(localStorage.getItem('forest-chapter-2')));
   assert.equal(beforeHelp.helped.river, false, 'Repeating does not reveal the target');
   await page.screenshot({ path: path.join(output, 'forest-river.png') });
-  await click('#help'); assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('forest-chapter-1')).helped.river), true);
+  await click('#help'); assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('forest-chapter-2')).helped.river), true);
   await click('#puzzle-back'); assert.equal(await phase(), 'river');
   await click('#next-place'); await page.locator('#dialogue').waitFor({ state: 'visible' }); await click('#dialogue-next');
   await click('[data-choice=lemonade]'); assert.equal(await phase(), 'treehouse');
@@ -106,8 +109,9 @@ const server = http.createServer((req, res) => {
   assert.match(await page.locator('#discovery-count').textContent(), /3\/3/);
   await page.reload(); await page.waitForSelector('#game[data-ready=true]'); await click('#begin');
   assert.equal(await phase(), 'complete'); assert.equal(await page.locator('#ending').isVisible(), true);
-  const save = await page.evaluate(() => JSON.parse(localStorage.getItem('forest-chapter-1')));
+  const save = await page.evaluate(() => JSON.parse(localStorage.getItem('forest-chapter-2')));
   assert.deepEqual([...save.found].sort(), [0, 1, 2]);
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('forest-chapter-1')).phase), 'complete', 'the original prototype data stays unchanged');
   await context.close();
   for (const [width, height, label] of [[844, 390, 'phone'], [1024, 768, 'tablet'], [390, 844, 'portrait']]) {
     const { page: p, context: c } = await game(width, height, { version: 1, phase: 'treehouse', found: [], helped: {} });

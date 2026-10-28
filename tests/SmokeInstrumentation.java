@@ -99,6 +99,7 @@ public final class SmokeInstrumentation extends Instrumentation {
             SharedPreferences legacy = getTargetContext().getSharedPreferences("learning-v1", 0);
             if ("seed".equals(args.getString("phase"))) {
                 check(legacy.edit().putString("p0.name", "Upgrade-Test").putInt("p0.stars", 7).commit(), "seed legacy preferences");
+                check(getTargetContext().getSharedPreferences("forest-story-v1", 0).edit().putString("chapter", "{\"version\":1,\"phase\":\"complete\",\"found\":[0,1,2]}").commit(), "seed the finished 0.4 prototype independently");
                 result.putString("summary", "PASS: legacy update fixture seeded"); finish(Activity.RESULT_OK, result); return;
             }
             activity = (MainActivity) startActivitySync(new Intent(getTargetContext(), MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
@@ -108,6 +109,8 @@ public final class SmokeInstrumentation extends Instrumentation {
             if ("upgrade".equals(args.getString("phase"))) {
                 check("Upgrade-Test".equals(legacy.getString("p0.name", "")) && legacy.getInt("p0.stars", 0) == 7, "old progress remains unmodified");
                 check("\"meeting\"".equals(js("document.getElementById('game').dataset.phase")), "new chapter starts independently from old rewards");
+                check(getTargetContext().getSharedPreferences("forest-story-v1", 0).getString("chapter", "").contains("complete"), "the earlier prototype save stays preserved");
+                check("0".equals(js("new ForestLetters.Lessons(JSON.parse(ForestHost.loadLetters())).completed")), "previous prototype cannot skip the letter introduction");
                 result.putString("summary", "PASS: " + checks + " update assertions"); finish(Activity.RESULT_OK, result); return;
             }
             if ("reopen".equals(args.getString("phase"))) {

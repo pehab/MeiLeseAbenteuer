@@ -26,3 +26,5 @@ Die vorhandenen Dateien `sounds/a.ogg`, `i.ogg`, `o.ogg`, `u.ogg`, `m.ogg`, `n.o
 - `python3 scripts/prepare-release.py`: Nur eine zum frischen Quellbuild passende APK mit der ursprünglichen Update-Signatur verpacken.
 
 Die Signatur wird lokal aus `.signing/` oder in Release-CI aus dem vorhandenen GitHub-Secret geladen. Private Schlüssel werden nicht eingecheckt. Pull-Request-CI verwendet einen temporären Testschlüssel. Die Testversion verändert den öffentlichen Update-Feed nicht.
+
+Die Wortgeschichte nach dem Buchstabenpfad verwendet einen neuen Speicherplatz. Ein fertiger 0.4-Teststand überspringt weder die Buchstaben noch die erste Sternenpost dieser Lernfolge; die gespeicherten Daten der alten Testfassung werden dabei nicht verändert.
