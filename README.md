@@ -1,45 +1,28 @@
-# MeiLeseAbenteuer · Der Geschichtenwald
+# MeiLeseAbenteuer · Der Buchstabenwald
 
-**Neustart als Spiel.** Aus dem vorherigen Entwurf wurden ausschließlich die vorhandenen Wald-, Tier- und Gegenstandsgrafiken übernommen. Geschichte, Navigation, Begegnungen und Rätsel sind neu. Der erste spielbare Abschnitt heißt **Die erste Sternenpost** (0.4.0, Prototyp).
+Offline-Androidspiel ohne Werbung oder Bezahlschranken. Der aktuelle Entwicklungsstand beginnt bei den ersten Buchstaben und führt anschließend in eine kurze Waldgeschichte mit ersten Wörtern.
 
-Die Android-App öffnet direkt den illustrierten Wald. Ein Fuchs trägt die Sternenpost von Nila zum Baumhaus. Der Weg führt zum Frosch Taro am Bach und weiter zur Empfängerin. Die Figur läuft, die Kamera folgt ihr, Licht und Glühwürmchen bewegen sich. Das Kind kann die Landschaft mit Wischen ansehen, auf dem Weg laufen und drei versteckte Glühwürmchen entdecken. Gelöste Rätsel schalten die Überfahrt frei und lassen am Baumhaus Licht aufgehen.
+## Einstieg
 
-## Der erste Abschnitt
+Acht kleine Waldkapitel führen **A, E, I, O, U, M, N und L** ein. Jedes Kapitel verbindet eine Begegnung mit einem Waldtier mit fünf Aufgaben: beide Buchstabenformen kennenlernen und den Laut hören, Großbuchstaben wiedererkennen, Kleinbuchstaben zuordnen, Großbuchstaben nachfahren, Kleinbuchstaben nachfahren. Startpunkte und nummerierte Spuren zeigen die Schreibbewegung. Die Vorführung löst eine Aufgabe nicht; das Kind muss die Form selbst nachfahren. Das kleine a ist einstöckig. Die Formen sind vorbereitende Schreibübungen, keine schulformspezifische Schriftvorlage oder freie Handschrifterkennung.
 
-1. **Nila begegnen:** den Auftrag für die Sternenpost annehmen.
-2. **Taros Wunschzettel:** das Wort **LIMO** lesen und das passende Gegenstandsbild wählen. Falsche Antworten lassen das Rätsel offen. „Hilf mir“ spricht die Lösung vor; die normale Wiederholung erklärt nur den Auftrag.
-3. **Der Brief am Baumhaus:** den Namen **OMA** aus Buchstaben zusammensetzen, durch Antippen oder Ziehen. Buchstaben können zurückgelegt werden. Nur die richtige Reihenfolge stellt die Post zu.
-4. **Ankunft:** die Sternenpost kommt an, im Baumhaus wird es hell. Das Kind kann weiter die Landschaft erkunden oder den Abschnitt neu spielen.
+Erst nach allen acht Kapiteln startet **Die erste Sternenpost**: Nila übergibt dem Fuchs einen Brief. Taro möchte LIMO; am Baumhaus wird OMA zusammengesetzt. Drei versteckte Glühwürmchen, bewegte Figuren, Licht und Glockenklänge verbinden die Aufgaben mit der Waldwelt. Ausschließlich vorhandene Grafiken werden genutzt.
 
-Der kurze Abschnitt erprobt **Spielgefühl, Atmosphäre und Bedienung für Kinder mit ersten Wortkenntnissen**. Er ist noch kein vollständiger Lesekurs: Es fehlen insbesondere eine geführte Einführung der Buchstaben, ein systematisches Lautieren und Zusammenschleifen, eine größere Lernfolge und mehr Kapitel. Einzelne Buchstaben werden nicht mit einer allgemeinen TTS-Stimme als vermeintliche Laute vorgesprochen. Die vorhandenen Tierbilder bewegen sich als ganze Figuren; echte Lauf- und Gesichtsanimationsphasen sind noch nicht enthalten.
+Geschaffte Buchstabenkapitel sind über das Blattsymbol wiederholbar. Der Stand wird nach jeder Aufgabe gespeichert. Eine unfertige Schreibform beginnt nach einem Neustart wieder am ersten Strich. Der Wortspielstand und alte Lerndaten bleiben unabhängig davon erhalten. Unter **Für Große** stehen Informationen, Sprachtest, Updates und ein geschützter Neustart bereit.
 
-## Android und Ton
+## Audio
 
-Die gesamte Spieloberfläche und alle Bilder liegen in der APK. Eine Android-WebView stellt die lokale Szene dar; sie lädt ausschließlich über einen abgeriegelten internen HTTPS-Ursprung aus den eingebauten Assets. Datei- und Inhaltszugriffe sowie externe Navigation sind gesperrt. Zum Spielen ist keine Netzwerkverbindung nötig.
+Die vorhandenen Dateien `sounds/a.ogg`, `i.ogg`, `o.ogg`, `u.ogg`, `m.ogg`, `n.ogg` und `l.ogg` sind wieder eingebunden. E und die Erzählung werden mit einer deutschen Geräte-Offlinestimme gesprochen. Bei fehlender Stimme im Elternbereich eine deutsche Offline-Stimme einrichten. Die Lauttaste für Konsonanten verwendet die Aufnahme, nicht den Namen „em“, „en“ oder „el“. Die Dateien stammen unverändert aus der bisherigen App; Quellenhinweise sind unter `audio-originals` bzw. in der Git-Historie dokumentiert.
 
-Deutsche Dialoge, Anleitungen und Hilfen verwenden eine installierte **deutsche Offline-Stimme**. Ohne passende Stimme bitte zunächst gemeinsam spielen. Über das Schloss oben rechts und die Erwachsenenfrage findet man Informationen, den Sprachtest bzw. die Einrichtung, Updates und den Neustart dieses Abschnitts. Glockenklänge werden lokal erzeugt. Der Ton ist abschaltbar und die Einstellung wird gespeichert.
+## Entwicklung und Prüfungen
 
-Der neue Kapitelstand wird getrennt als `forest-story-v1` gespeichert. Abgeschlossene Begegnungen, benutzte Hilfen und entdeckte Glühwürmchen bleiben erhalten. Alte Lernstände werden weder umgerechnet noch gelöscht. Dieser erste Entwurf verwendet einen gemeinsamen Kapitelstand; mehrere Kinderprofile sind hier noch nicht umgesetzt.
+- `bash test.sh`: Kapitel-/Lernfolge, Speicherformate und geometrische Schreibprüfung.
+- `bash scripts/test-update-contract.sh`: Installationsquelle und APK-Verifikation.
+- `python3 scripts/check-release-metadata.py`: Der bisherige öffentliche Feed bleibt konsistent.
+- `PLAYWRIGHT_MODULE=/path/to/playwright node tests/browser.cjs`: Alle acht Kapitel mit echten Zeigereingaben, Wiederholung/Neustart, Handylayouts und anschließende Worträtsel.
+- `ANDROID_SDK_ROOT=/path/to/sdk bash build-local.sh` und `bash test-android-build.sh`: Nativer APK- und Instrumentation-Build; Android 37.0 / Build Tools 36.0.0 / Java 17.
+- `bash gradlew assembleDebug lintDebug`: Gradle und striktes Android-Lint.
+- `bash scripts/run-emulator.sh`: Echte Android-WebView, alle Buchstabenformen über Touch-Ereignisse, Sternenpost, Update und Prozessneustart; CI auf API 30 und 37.0.
+- `python3 scripts/prepare-release.py`: Nur eine zum frischen Quellbuild passende APK mit der ursprünglichen Update-Signatur verpacken.
 
-Paketname, Signierschlüssel und die Update-Infrastruktur bleiben kompatibel. Der öffentliche Update-Feed wird durch einen Entwicklungsbranch nicht umgestellt. Ein Release wird erst nach erfolgreicher Prüfung veröffentlicht. Details der bestehenden Update-Sicherheitsprüfung: [docs/UPDATES.md](docs/UPDATES.md).
-
-## Bauen und prüfen
-
-```sh
-bash test.sh
-bash scripts/test-update-contract.sh
-python3 scripts/check-release-metadata.py
-ANDROID_SDK_ROOT=/path/to/android-sdk bash build-local.sh
-ANDROID_SDK_ROOT=/path/to/android-sdk bash test-android-build.sh
-```
-
-Der direkte Build verwendet Java 17, Android-Plattform 37.0 und Build Tools 36.0.0. Node.js ab Version 18 wird für die Kapiteltests benötigt. Der private Signierordner `.signing/` darf niemals veröffentlicht werden. Updates benötigen denselben Schlüssel wie bisher.
-
-Zusätzliche Prüfungen:
-
-- `tests/story.test.cjs`: Kapitelreihenfolge, falsche und doppelte Antworten, Hilfen, beschädigte Speicherstände und Wiederherstellung nach gelösten Rätseln.
-- `tests/browser.cjs`: echte Chromium-Interaktion mit dem vollständigen Kapitel, Buchstaben per Drag-and-drop, Hilfen, Neustart, allen Glühwürmchen und drei Bildschirmformaten. Benötigt Playwright 1.51.1 und Chromium. Optional `PLAYWRIGHT_MODULE=/absolute/path/to/playwright node tests/browser.cjs`.
-- `tests/SmokeInstrumentation.java`: reale Android-WebView, gebündelte Assets ohne Verbindung, Kapitelabschluss, Neustart und Erhalt alter Daten bei APK-Update. Ausführbar mit `scripts/run-emulator.sh`.
-- CI: Kapiteltests, Browserprüfungen, nativer APK-Build, Gradle/Lint und Android-Geräteprüfungen auf API 30 und 37.0. Screenshots werden als Prüfarbeitsdateien bereitgestellt.
-
-Vor einer Freigabe sind die Screenshots visuell sowie Aussprache, Schriftgröße, Berührung und Tempo auf dem Kindergerät zu prüfen. Ein erfolgreicher Build allein belegt diese Qualität nicht.
+Die Signatur wird lokal aus `.signing/` oder in Release-CI aus dem vorhandenen GitHub-Secret geladen. Private Schlüssel werden nicht eingecheckt. Pull-Request-CI verwendet einen temporären Testschlüssel. Die Testversion verändert den öffentlichen Update-Feed nicht.

@@ -4,6 +4,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
+const { letters } = require('../app/src/main/assets/forest/letters.js');
 const root = path.resolve('app/src/main/assets/forest');
 const output = path.resolve('build'); fs.mkdirSync(output, { recursive: true });
 const server = http.createServer((req, res) => {
@@ -23,14 +24,52 @@ const server = http.createServer((req, res) => {
     await page.route('**/*', route => { assert.ok(route.request().url().startsWith(`http://127.0.0.1:${server.address().port}/`), 'all resources are offline and bundled'); return route.continue(); });
     await page.goto(url); await page.waitForSelector('#game[data-ready=true]');
     assert.equal(await page.locator('#viewport').evaluate(e => e.clientWidth > 100 && e.clientHeight > 100), true, 'world is visibly laid out');
-    if (seed) { await page.evaluate(value => localStorage.setItem('forest-chapter-1', JSON.stringify(value)), seed); await page.reload(); await page.waitForSelector('#game[data-ready=true]'); }
+    if (seed) { await page.evaluate(value => { localStorage.setItem('forest-chapter-1', JSON.stringify(value)); localStorage.setItem('forest-letters-1', JSON.stringify({ version: 1, completed: 8, index: 7, step: 'reward' })); }, seed); await page.reload(); await page.waitForSelector('#game[data-ready=true]'); }
     return { page, context };
   }
   const { page, context } = await game(1280, 800);
   const click = async selector => page.locator(selector).click();
   const phase = async () => page.locator('#game').getAttribute('data-phase');
   await page.screenshot({ path: path.join(output, 'forest-intro.png') });
-  await click('#begin'); await page.locator('#dialogue').waitFor({ state: 'visible' });
+  await click('#begin');
+  await page.locator('#lesson').waitFor({ state: 'visible' });
+  assert.equal(await phase(), 'meeting', 'the word story waits for the letters');
+  await click('#lesson-path');
+  assert.equal(await page.locator('[data-chapter="1"]').isDisabled(), true);
+  await click('[data-chapter="0"]');
+  async function traceForm(p, strokes) {
+    for (const points of strokes) {
+      const screen = await p.locator('#trace-board').evaluate((e, pts) => pts.map(([x, y]) => { const point = e.createSVGPoint(); point.x = x; point.y = y; const q = point.matrixTransform(e.getScreenCTM()); return [q.x, q.y]; }), points);
+      await p.mouse.move(...screen[0]); await p.mouse.down();
+      for (let i = 1; i < screen.length; i++) await p.mouse.move(...screen[i], { steps: Math.max(1, Math.ceil(Math.hypot(screen[i][0] - screen[i-1][0], screen[i][1] - screen[i-1][1]) / 12)) });
+      await p.mouse.up();
+    }
+    assert.equal(await p.locator('#lesson-next').isDisabled(), false, 'a fully traced letter enables continuing');
+  }
+  for (let i = 0; i < letters.length; i++) {
+    const letter = letters[i];
+    assert.equal(await page.locator('#lesson').getAttribute('data-index'), String(i));
+    await click('#letter-sound');
+    await click('#lesson-next');
+    const wrong = await page.locator(`#letter-options button:not([data-answer="${letter.upper}"])`).first();
+    await wrong.click(); assert.equal(await page.locator('#lesson').getAttribute('data-step'), 'find');
+    await page.locator(`#letter-options [data-answer="${letter.upper}"]`).click();
+    await page.locator(`#letter-options [data-answer="${letter.lower}"]`).click();
+    assert.equal(await page.locator('#lesson-next').isDisabled(), true);
+    if (i === 0) {
+      await page.screenshot({ path: path.join(output, 'letters-writing.png') });
+      await click('#trace-demo'); await page.waitForTimeout(400);
+      assert.equal(await page.locator('#lesson-next').isDisabled(), true, 'watching the demonstration does not solve the exercise');
+      await page.reload(); await page.waitForSelector('#game[data-ready=true]'); await click('#begin');
+      assert.equal(await page.locator('#lesson').getAttribute('data-step'), 'writeUpper', 'resume the exercise after a restart');
+    }
+    await traceForm(page, letter.upperStrokes); await click('#lesson-next');
+    await traceForm(page, letter.lowerStrokes); await click('#lesson-next');
+    assert.equal(await page.locator('#lesson').getAttribute('data-step'), 'reward');
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('forest-letters-1')).completed), i + 1);
+    await click('#lesson-next');
+  }
+  await page.locator('#dialogue').waitFor({ state: 'visible' });
   await click('#dialogue-next'); assert.equal(await phase(), 'river');
   await click('[data-secret="0"]');
   await page.screenshot({ path: path.join(output, 'forest-path.png') });
@@ -78,7 +117,20 @@ const server = http.createServer((req, res) => {
     for (const letter of ['O', 'M', 'A']) await p.locator(`[data-letter=${letter}]`).click();
     assert.equal(await p.locator('#game').getAttribute('data-phase'), 'complete'); await c.close();
   }
+  for (const [width, height, label] of [[844, 390, 'phone'], [390, 844, 'portrait']]) {
+    const { page: p, context: c } = await game(width, height);
+    await p.locator('#begin').click(); await p.locator('#lesson-next').click();
+    await p.locator('[data-answer=A]').click(); await p.locator('[data-answer=a]').click();
+    const box = await p.locator('#trace-board').boundingBox();
+    assert.ok(box.x >= 0 && box.y >= 0 && box.x + box.width <= width + 1 && box.y + box.height <= height + 1);
+    await p.screenshot({ path: path.join(output, `letters-${label}.png`) });
+    await traceForm(p, letters[0].upperStrokes); await p.locator('#lesson-next').click();
+    await traceForm(p, letters[0].lowerStrokes); await p.locator('#lesson-next').click();
+    await p.reload(); await p.waitForSelector('#game[data-ready=true]'); await p.locator('#begin').click();
+    assert.equal(await p.locator('#lesson').getAttribute('data-step'), 'reward');
+    await c.close();
+  }
   assert.deepEqual(errors, [], 'no uncaught JavaScript errors');
   await browser.close(); await new Promise(resolve => server.close(resolve));
-  console.log('PASS: complete chapter, wrong answers, help, drag, discoveries, reload and 3 screen sizes');
+  console.log('PASS: all eight letters, real pointer writing of both cases, locked chapters, restart, three screen sizes and the complete word story');
 })().catch(error => { console.error(error); server.close(); process.exit(1); });

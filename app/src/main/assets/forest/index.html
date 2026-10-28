@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'">
-  <title>MeiLeseAbenteuer · Die erste Sternenpost</title>
+  <title>MeiLeseAbenteuer · Der Buchstabenwald</title>
   <link rel="stylesheet" href="forest.css">
 </head>
 <body>
@@ -29,13 +29,13 @@
   </div>
   <div class="vignette" aria-hidden="true"></div>
   <header id="hud">
-    <button id="chapter" aria-label="Zur eigenen Figur zurückkehren"><span class="chapter-leaf">❧</span><span><small>MEILESEABENTEUER</small><strong>Die erste Sternenpost</strong></span></button>
+    <button id="chapter" aria-label="Zur eigenen Figur zurückkehren"><span class="chapter-leaf">❧</span><span><small>MEILESEABENTEUER</small><strong>Der Buchstabenwald</strong></span></button>
     <nav aria-label="Einstellungen"><button id="sound" class="round" aria-label="Ton ausschalten" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zM16 8q5 4 0 8M19 5q7 7 0 14"/></svg></button><button id="grownups" class="round" aria-label="Für Große"><svg viewBox="0 0 24 24"><path d="M9 11V7a3 3 0 0 1 6 0v4M6 11h12v10H6z"/></svg></button></nav>
   </header>
   <section id="intro" aria-label="Beginn des Abenteuers">
-    <div class="eyebrow">EIN KLEINES WALDABENTEUER</div>
-    <h1>Eine Nachricht.<br>Ein großer <em>Weg.</em></h1>
-    <p>Im Baumhaus wartet jemand auf Post.<br>Und im Wald wartet ein Abenteuer auf dich.</p>
+    <div class="eyebrow">ACHT BUCHSTABEN · EIN WALDVOLLER GESCHICHTEN</div>
+    <h1>Ein kleiner Anfang.<br>Ein großer <em>Weg.</em></h1>
+    <p>Entdecke die Buchstaben im Wald.<br>Hören, finden und mit dem Finger schreiben.</p>
     <button id="begin" class="primary">Abenteuer beginnen <span>➜</span></button>
     <p class="orientation-tip">Im Querformat siehst du mehr vom Wald.</p>
     <div id="continue-note" hidden>Dein Weg geht hier weiter.</div>
@@ -63,10 +63,25 @@
     <div class="puzzle-bottom"><button id="help" class="help-button">✧ Hilf mir</button><p id="feedback" role="status" aria-live="polite"></p><span class="no-rush">Du hast Zeit.</span></div>
     <div id="puzzle-success" hidden><span>✦</span><h2 id="success-title"></h2><p id="success-text"></p><button id="success-next" class="primary">Weiter im Abenteuer <span>➜</span></button></div>
   </section>
+  <section id="lesson" hidden aria-label="Buchstaben im Geschichtenwald">
+    <div class="lesson-top"><button id="lesson-path" class="round" aria-label="Buchstabenpfad öffnen">❧</button><div><small id="lesson-eyebrow"></small><h2 id="lesson-title"></h2></div><button id="lesson-repeat" class="round" aria-label="Aufgabe noch einmal hören">↻</button></div>
+    <div id="lesson-trail" aria-label="Dein Weg durch die acht Buchstaben"></div>
+    <div id="lesson-body">
+      <div class="lesson-friend"><canvas id="lesson-friend-art"></canvas><p id="lesson-story"></p><button id="letter-sound" class="help-button" aria-label="Buchstabenlaut hören">♫ Laut hören</button></div>
+      <div id="lesson-activity">
+        <div id="letter-meeting"><div id="letter-pair" aria-label="Großer und kleiner Buchstabe"></div><p>Schau, so sehen die beiden aus.</p></div>
+        <div id="letter-finding" hidden><div id="letter-model"></div><div id="letter-options" role="group" aria-label="Finde den passenden Buchstaben"></div></div>
+        <div id="letter-writing" hidden><div class="trace-caption"><strong id="trace-label"></strong><span id="trace-count"></span></div><svg id="trace-board" viewBox="0 0 300 230" aria-label="Buchstaben mit dem Finger nachfahren" role="img"></svg><div class="trace-tools"><button id="trace-demo" class="text-button">▷ Zeig es mir</button><button id="trace-reset" class="text-button">↶ Noch einmal</button></div></div>
+        <div id="letter-reward" hidden><div class="letter-spark">✦</div><div id="reward-pair"></div><h3>Dein Buchstabe leuchtet!</h3><p id="letter-reward-text"></p></div>
+        <div id="lesson-map" hidden><h3>Dein Buchstabenpfad</h3><p>Tippe auf einen offenen Buchstaben. Du kannst ihn noch einmal entdecken.</p><div id="lesson-map-buttons"></div><button id="lesson-to-story" class="primary" hidden>Zur Sternenpost <span>➜</span></button></div>
+      </div>
+    </div>
+    <div class="lesson-bottom"><p id="lesson-feedback" role="status" aria-live="polite"></p><button id="lesson-next" class="primary">Los geht’s <span>➜</span></button></div>
+  </section>
   <section id="ending" hidden aria-label="Kapitel abgeschlossen"><div class="eyebrow">DIE ERSTE STERNENPOST</div><div class="end-stars">✧ ✦ ✧</div><h1>Ein Licht<br>für <em>Oma.</em></h1><p>Die Post ist angekommen.<br>Und im Baumhaus wird es hell.</p><p class="end-discoveries"></p><button id="stay" class="primary">Noch im Wald bleiben <span>❧</span></button><button id="replay" class="text-button">Das Abenteuer noch einmal spielen</button></section>
   <div id="toast" role="status" aria-live="polite"></div>
   <div id="loading">Der Geschichtenwald erwacht …</div>
 </main>
-<script src="story.js"></script><script src="forest.js"></script>
+<script src="story.js"></script><script src="letters.js"></script><script src="lessons-ui.js"></script><script src="forest.js"></script>
 </body>
 </html>

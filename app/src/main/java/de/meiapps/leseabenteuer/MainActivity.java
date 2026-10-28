@@ -61,7 +61,7 @@ public final class MainActivity extends Activity {
                 String path = uri.getPath();
                 if ("https".equals(uri.getScheme()) && "appassets.androidplatform.net".equals(uri.getHost())
                         && path != null && path.startsWith("/forest/") && !path.contains("..") && !path.contains("\\")) {
-                    String mime = path.endsWith(".html") ? "text/html" : path.endsWith(".css") ? "text/css" : path.endsWith(".js") ? "application/javascript" : path.endsWith(".webp") ? "image/webp" : null;
+                    String mime = path.endsWith(".html") ? "text/html" : path.endsWith(".css") ? "text/css" : path.endsWith(".js") ? "application/javascript" : path.endsWith(".webp") ? "image/webp" : path.endsWith(".ogg") ? "audio/ogg" : null;
                     if (mime != null) try { return new WebResourceResponse(mime, "UTF-8", getAssets().open(path.substring(1))); }
                     catch (IOException ignored) { /* Missing bundled asset is reported by the game's loading screen. */ }
                 }
@@ -147,25 +147,38 @@ public final class MainActivity extends Activity {
     private void parentSettings() {
         inParents = true; updates.resume();
         AlertDialog menu = new AlertDialog.Builder(this).setTitle("MeiLeseAbenteuer · Für Große")
-                .setItems(new String[]{"Erster Waldabschnitt · erste Wörter", voiceReady ? "Deutsche Offline-Stimme testen" : "Deutsche Offline-Stimme einrichten", "Updates", "Diesen Waldabschnitt neu beginnen"}, null)
+                .setItems(new String[]{"Buchstabenpfad · acht erste Buchstaben", voiceReady ? "Deutsche Offline-Stimme testen" : "Deutsche Offline-Stimme einrichten", "Updates", "Buchstabenpfad und Sternenpost neu beginnen"}, null)
                 .setNegativeButton("Zurück in den Wald", null).create();
         menu.setOnDismissListener(d -> { inParents = false; updates.pause(); });
         menu.show();
         // Keep the gated menu open underneath subdialogs and the update/install flow.
         menu.getListView().setOnItemClickListener((parent, row, n, id) -> {
-                    if (n == 0) new AlertDialog.Builder(this).setTitle("Die erste Sternenpost")
-                            .setMessage("Dieser erste spielbare Abschnitt erprobt die neue Spielwelt. Er enthält die Wörter LIMO und OMA sowie drei versteckte Glühwürmchen. Eine vollständige Einführung der Buchstaben folgt später. Hilf mir spricht das gesuchte Wort vor. Dafür ist eine installierte deutsche Offline-Stimme nötig. Ohne Stimme bitte gemeinsam spielen. Alte Lernstände werden nicht in die neue Geschichte übernommen und bleiben unberührt.")
+                    if (n == 0) new AlertDialog.Builder(this).setTitle("Der Buchstabenwald")
+                            .setMessage("Acht kurze Waldkapitel führen A, E, I, O, U, M, N und L ein: Laute hören, Groß- und Kleinbuchstaben erkennen und beide Formen mit Startpunkten nachfahren. Die kleine a-Form ist einstöckig. Das ist eine erste Formübung, noch keine freie Handschrifterkennung. Die vorhandenen sieben Lautaufnahmen werden offline verwendet; E und die Erzählung nutzen die deutsche Offline-Stimme. Erst nach dem Buchstabenpfad folgt die Sternenpost mit LIMO und OMA. Buchstabenpfad und Sternenpost werden getrennt gespeichert. Alte Lernstände bleiben erhalten.")
                             .setPositiveButton("Verstanden", null).show();
                     else if (n == 1) {
                         if (voiceReady) speak("Willkommen im Geschichtenwald. Nila möchte die Sternenpost zum Baumhaus bringen.");
                         else try { startActivity(new Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA)); }
                         catch (android.content.ActivityNotFoundException e) { Toast.makeText(this, "Bitte eine deutsche Offline-Stimme in den Android-Spracheinstellungen installieren.", Toast.LENGTH_LONG).show(); }
                     } else if (n == 2) updates.settings();
-                    else new AlertDialog.Builder(this).setTitle("Waldabschnitt neu beginnen?").setMessage("Die Sternenpost und die drei Glühwürmchen beginnen von vorn.")
-                            .setNegativeButton("Abbrechen", null).setPositiveButton("Neu beginnen", (x, y) -> { preferences.edit().remove("chapter").apply(); web.reload(); }).show();
+                    else new AlertDialog.Builder(this).setTitle("Waldabschnitt neu beginnen?").setMessage("Die acht Buchstabenkapitel, die Sternenpost und die drei Glühwürmchen beginnen von vorn.")
+                            .setNegativeButton("Abbrechen", null).setPositiveButton("Neu beginnen", (x, y) -> { preferences.edit().remove("chapter").remove("letters").apply(); web.reload(); }).show();
                 });
     }
     final class ForestBridge {
+        @JavascriptInterface public String loadLetters() { return preferences.getString("letters", "{}"); }
+        @JavascriptInterface public void saveLetters(String value) {
+            if (value == null || value.length() > 1024) return;
+            try {
+                JSONObject input = new JSONObject(value);
+                int completed = input.getInt("completed"), index = input.getInt("index");
+                String step = input.getString("step");
+                if (input.optInt("version") != 1 || completed < 0 || completed > 8 || index < 0 || index > Math.min(completed, 7)
+                        || !Arrays.asList("meet", "find", "pair", "writeUpper", "writeLower", "reward").contains(step)
+                        || ("reward".equals(step) && index >= completed)) return;
+                preferences.edit().putString("letters", new JSONObject().put("version", 1).put("completed", completed).put("index", index).put("step", step).toString()).apply();
+            } catch (JSONException ignored) { /* Keep the last valid lesson save. */ }
+        }
         @JavascriptInterface public String load() { return preferences.getString("chapter", "{}"); }
         @JavascriptInterface public void save(String value) {
             if (value == null || value.length() > 4096) return;

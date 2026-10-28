@@ -235,17 +235,25 @@
     if (reduceMotion) return;
     for (let i = 0; i < 35; i++) { const bit = document.createElement('i'); bit.className = 'burst'; bit.style.cssText = `left:${50 + Math.random() * 30}%;top:${20 + Math.random() * 40}%;--bx:${Math.random() * 250 - 125}px;--by:${Math.random() * 260 - 100}px;animation-delay:${Math.random() * .5}s`; $('game').append(bit); setTimeout(() => bit.remove(), 2200); }
   }
-  $('begin').onclick = () => {
+  function beginStory() {
     initAudio(); started = true; $('intro').hidden = true; update();
     if (story.phase === 'meeting') moveTo(470, 800, nila);
     else if (story.phase === 'complete') showEnding();
     else say(story.phase === 'river' ? 'Die Sternenpost wartet. Taro, der Frosch, ist am Bach.' : 'Du bist fast da! Bringe die Sternenpost zum Baumhaus.');
   };
+  const journey = createLetterJourney({
+    paintSprite, say, stopSpeech, chime, muted: () => muted,
+    opened() { modal = true; $('intro').hidden = true; update(); },
+    exited() { modal = false; started = false; $('intro').hidden = false; update(); },
+    finished() { modal = false; beginStory(); },
+    travel(index) { foxX = 450 + index * 180; foxY = 800 - Math.max(0, foxX - 1300) * .3; follow(); }
+  });
+  $('begin').onclick = () => { if (journey.done) beginStory(); else journey.open(); };
   $('rabbit').onclick = nila; $('frog').onclick = frog; $('grandma').onclick = () => { if (started && story.phase === 'complete' && !modal && !busy) showEnding(); };
   $('river-stop').onclick = () => { if (!started || modal || busy) return; if (story.phase === 'meeting') nila(); else moveTo(1120, 820, frog); };
   $('house-stop').onclick = () => { if (!started || modal || busy) return; if (['meeting', 'river'].includes(story.phase)) { toast('Taro hilft dir zuerst über den Bach.'); say('Taro hilft dir zuerst über den Bach.'); } else destination(); };
   $('next-place').onclick = destination;
-  $('chapter').onclick = () => { if (!modal) follow(); };
+  $('chapter').onclick = () => { if (!modal || journey.active) journey.open(true); };
   $('dialogue-next').onclick = closeDialogue; $('repeat-dialogue').onclick = () => say($('dialogue-text').textContent);
   $('puzzle-back').onclick = closePuzzle;
   $('puzzle-repeat').onclick = () => say($('puzzle-success').hidden ? ($('game').dataset.puzzle === 'river' ? riverInstruction : houseInstruction) : `${$('success-title').textContent} ${$('success-text').textContent}`);
@@ -266,11 +274,11 @@
   $('sound').onclick = () => {
     muted = !muted; $('sound').setAttribute('aria-pressed', String(muted)); $('sound').setAttribute('aria-label', muted ? 'Ton einschalten' : 'Ton ausschalten');
     if (host) host.setMuted(muted); else localStorage.setItem('forest-muted', String(muted));
-    if (muted) { stopSpeech(); audio?.suspend(); } else { initAudio(); if (lastSpeech) say(lastSpeech); }
+    if (muted) { journey.stopAudio(); stopSpeech(); audio?.suspend(); } else { initAudio(); if (lastSpeech) say(lastSpeech); }
   };
   $('grownups').onclick = () => { if (host) host.openParents(); else toast('Die Android-App bietet hier Sprachtest, Updates und einen geschützten Neustart.'); };
-  window.forestBack = () => { if (!$('dialogue').hidden) { nextDialogue = null; closeDialogue(); return true; } if (!$('puzzle').hidden) { if (busy) { const action = successAction; successAction = null; busy = false; if (action) action(); } else closePuzzle(); return true; } if (!$('ending').hidden) { $('stay').click(); return true; } return false; };
-  window.forestPaused = value => { paused = value; if (value) { stopSpeech(); audio?.suspend(); } else { lastFrame = 0; if (!muted) audio?.resume().catch(() => {}); } };
+  window.forestBack = () => { if (journey.back()) return true; if (!$('dialogue').hidden) { nextDialogue = null; closeDialogue(); return true; } if (!$('puzzle').hidden) { if (busy) { const action = successAction; successAction = null; busy = false; if (action) action(); } else closePuzzle(); return true; } if (!$('ending').hidden) { $('stay').click(); return true; } return false; };
+  window.forestPaused = value => { paused = value; if (value) { journey.pause(); stopSpeech(); audio?.suspend(); } else { lastFrame = 0; if (!muted) audio?.resume().catch(() => {}); } };
   document.addEventListener('visibilitychange', () => window.forestPaused(document.hidden));
   $('viewport').onpointerdown = e => { if (!started || modal || busy || e.target.closest('button')) return; pan = { x: e.clientX, last: e.clientX, y: e.clientY, camera, moved: false }; $('viewport').setPointerCapture(e.pointerId); };
   $('viewport').onpointermove = e => { if (!pan) return; if (Math.abs(e.clientX - pan.x) > 10) pan.moved = true; if (pan.moved) targetCamera = Math.max(0, Math.min(Math.max(0, 2500 - viewWidth), pan.camera - (e.clientX - pan.x) / scale)); };
@@ -290,9 +298,10 @@
     for (let i = 0; i < 35; i++) { const mote = document.createElement('i'); mote.className = 'mote'; mote.style.cssText = `left:${Math.random() * 2500}px;top:${200 + Math.random() * 600}px;--duration:${5 + Math.random() * 6}s;--delay:-${Math.random() * 8}s`; $('particles').append(mote); }
     if (story.phase === 'river') { foxX = 900; foxY = 800; }
     if (['treehouse', 'complete'].includes(story.phase)) { foxX = 1900; foxY = 620; }
-    if (story.phase !== 'meeting') { $('begin').innerHTML = 'Abenteuer fortsetzen <span>➜</span>'; $('continue-note').hidden = false; }
+    if (journey.done && story.phase !== 'meeting') { $('begin').innerHTML = 'Abenteuer fortsetzen <span>➜</span>'; $('continue-note').hidden = false; }
     try { muted = host ? host.isMuted() : localStorage.getItem('forest-muted') === 'true'; } catch (_) { muted = false; }
     $('sound').setAttribute('aria-pressed', String(muted)); $('sound').setAttribute('aria-label', muted ? 'Ton einschalten' : 'Ton ausschalten');
+    if (!journey.done) $('begin').innerHTML = 'Zum Buchstabenpfad <span>➜</span>';
     resize(); camera = targetCamera; update(); $('loading').hidden = true; $('game').dataset.ready = 'true'; requestAnimationFrame(frame);
   }).catch(() => { $('loading').textContent = 'Der Wald konnte nicht geladen werden. Bitte starte die App neu.'; });
 })();

@@ -7,6 +7,9 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.webkit.WebView;
+import android.view.MotionEvent;
+import android.os.SystemClock;
+import org.json.JSONArray;
 import java.io.ByteArrayOutputStream;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +36,50 @@ public final class SmokeInstrumentation extends Instrumentation {
         await("document.querySelector(" + org.json.JSONObject.quote(selector) + ") && !document.querySelector(" + org.json.JSONObject.quote(selector) + ").disabled && document.querySelector(" + org.json.JSONObject.quote(selector) + ").getClientRects().length > 0");
         js("document.querySelector(" + org.json.JSONObject.quote(selector) + ").click()");
         Thread.sleep(100);
+    }
+    private void traceLetter(boolean lower) throws Exception {
+        String form = lower ? "lowerStrokes" : "upperStrokes";
+        String script = "(() => {const b=document.getElementById('trace-board'); const r=" + web.getWidth() + "/document.documentElement.clientWidth; const item=ForestLetters.letters[Number(document.getElementById('lesson').dataset.index)];return item." + form + ".map(s=>ForestLetters.sample(s,8).map(v=>{const p=b.createSVGPoint();p.x=v[0];p.y=v[1];const q=p.matrixTransform(b.getScreenCTM());return [q.x*r,q.y*r];}));})()";
+        JSONArray strokes = new JSONArray(js(script));
+        int[] location = new int[2]; runOnMainSync(() -> web.getLocationOnScreen(location));
+        for (int s = 0; s < strokes.length(); s++) {
+            JSONArray points = strokes.getJSONArray(s); long down = SystemClock.uptimeMillis();
+            for (int i = 0; i < points.length(); i++) {
+                JSONArray point = points.getJSONArray(i);
+                MotionEvent event = MotionEvent.obtain(down, SystemClock.uptimeMillis(), i == 0 ? MotionEvent.ACTION_DOWN : MotionEvent.ACTION_MOVE,
+                        (float) point.getDouble(0) + location[0], (float) point.getDouble(1) + location[1], 0);
+                sendPointerSync(event); event.recycle(); Thread.sleep(4);
+            }
+            JSONArray point = points.getJSONArray(points.length() - 1);
+            MotionEvent up = MotionEvent.obtain(down, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP,
+                    (float) point.getDouble(0) + location[0], (float) point.getDouble(1) + location[1], 0);
+            sendPointerSync(up); up.recycle(); Thread.sleep(80);
+        }
+        check("true".equals(js("!document.getElementById('lesson-next').disabled")), "real Android touch completes " + form);
+    }
+    private void learnLetters() throws Exception {
+        click("#begin"); await("!document.getElementById('lesson').hidden");
+        check("\"meeting\"".equals(js("document.getElementById('game').dataset.phase")), "word story stays locked during letter learning");
+        click("#lesson-path"); check("true".equals(js("document.querySelector('[data-chapter=\"1\"]').disabled")), "later letter chapters are locked");
+        click("[data-chapter='0']");
+        String[] upper = {"A", "E", "I", "O", "U", "M", "N", "L"};
+        for (int i = 0; i < upper.length; i++) {
+            check(Integer.toString(i).equals(js("Number(document.getElementById('lesson').dataset.index)")), "correct letter chapter");
+            click("#letter-sound"); click("#lesson-next");
+            if (i == 0) {
+                js("document.querySelector('#letter-options button:not([data-answer=A])').click()");
+                check("\"find\"".equals(js("document.getElementById('lesson').dataset.step")), "wrong letter cannot advance");
+                screenshot("letters-native-find.jpg");
+            }
+            click("[data-answer='" + upper[i] + "']");
+            click("[data-answer='" + upper[i].toLowerCase(java.util.Locale.ROOT) + "']");
+            check("true".equals(js("document.getElementById('lesson-next').disabled")), "writing requires actual finger input");
+            if (i == 0) screenshot("letters-native-writing.jpg");
+            traceLetter(false); click("#lesson-next"); traceLetter(true); click("#lesson-next");
+            check(Integer.toString(i + 1).equals(js("JSON.parse(ForestHost.loadLetters()).completed")), "completed letter persisted");
+            click("#lesson-next");
+        }
+        check("8".equals(js("JSON.parse(ForestHost.loadLetters()).completed")), "all letters precede words");
     }
     private void screenshot(String name) throws Exception {
         CountDownLatch painted = new CountDownLatch(1);
@@ -65,12 +112,13 @@ public final class SmokeInstrumentation extends Instrumentation {
             }
             if ("reopen".equals(args.getString("phase"))) {
                 check("\"complete\"".equals(js("document.getElementById('game').dataset.phase")), "chapter survives process restart");
+                check("8".equals(js("JSON.parse(ForestHost.loadLetters()).completed")), "letter chapters survive process restart");
                 click("#begin"); await("!document.getElementById('ending').hidden");
                 check("true".equals(js("JSON.parse(ForestHost.load()).helped.river")), "help survives process restart");
                 result.putString("summary", "PASS: " + checks + " restart assertions"); finish(Activity.RESULT_OK, result); return;
             }
             screenshot("forest-native-intro.jpg");
-            click("#begin"); await("!document.getElementById('dialogue').hidden"); click("#dialogue-next");
+            learnLetters(); await("!document.getElementById('dialogue').hidden"); click("#dialogue-next");
             check("\"river\"".equals(js("document.getElementById('game').dataset.phase")), "accepting the post starts journey");
             click("[data-secret='0']"); screenshot("forest-native-path.jpg");
             click("#next-place"); await("!document.getElementById('dialogue').hidden"); click("#dialogue-next");
