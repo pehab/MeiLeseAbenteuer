@@ -86,6 +86,7 @@ jobs:
           path: |
             app/build/reports/
             build/*.png
+            build/*.jpg
             build/android-*.log
 
   verify-release-package:

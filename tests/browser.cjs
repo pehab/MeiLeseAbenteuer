@@ -22,6 +22,7 @@ const server = http.createServer((req, res) => {
     const page = await context.newPage(); page.on('pageerror', error => errors.push(String(error)));
     await page.route('**/*', route => { assert.ok(route.request().url().startsWith(`http://127.0.0.1:${server.address().port}/`), 'all resources are offline and bundled'); return route.continue(); });
     await page.goto(url); await page.waitForSelector('#game[data-ready=true]');
+    assert.equal(await page.locator('#viewport').evaluate(e => e.clientWidth > 100 && e.clientHeight > 100), true, 'world is visibly laid out');
     if (seed) { await page.evaluate(value => localStorage.setItem('forest-chapter-1', JSON.stringify(value)), seed); await page.reload(); await page.waitForSelector('#game[data-ready=true]'); }
     return { page, context };
   }

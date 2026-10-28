@@ -30,7 +30,7 @@ public final class SmokeInstrumentation extends Instrumentation {
         throw new AssertionError("Timed out: " + expression + "\n" + js("document.body.innerText"));
     }
     private void click(String selector) throws Exception {
-        await("document.querySelector(" + org.json.JSONObject.quote(selector) + ") && !document.querySelector(" + org.json.JSONObject.quote(selector) + ").disabled");
+        await("document.querySelector(" + org.json.JSONObject.quote(selector) + ") && !document.querySelector(" + org.json.JSONObject.quote(selector) + ").disabled && document.querySelector(" + org.json.JSONObject.quote(selector) + ").getClientRects().length > 0");
         js("document.querySelector(" + org.json.JSONObject.quote(selector) + ").click()");
         Thread.sleep(100);
     }
@@ -43,7 +43,7 @@ public final class SmokeInstrumentation extends Instrumentation {
         Thread.sleep(250);
         getUiAutomation().waitForIdle(300, 3000);
         Bitmap bitmap = getUiAutomation().takeScreenshot(); check(bitmap != null, "screenshot available");
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream(); bitmap.compress(Bitmap.CompressFormat.PNG, 100, bytes); bitmap.recycle();
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream(); bitmap.compress(Bitmap.CompressFormat.JPEG, 86, bytes); bitmap.recycle();
         Bundle image = new Bundle(); image.putString("image_" + name, android.util.Base64.encodeToString(bytes.toByteArray(), android.util.Base64.NO_WRAP)); sendStatus(0, image);
     }
     @Override public void onStart() {
@@ -69,28 +69,28 @@ public final class SmokeInstrumentation extends Instrumentation {
                 check("true".equals(js("JSON.parse(ForestHost.load()).helped.river")), "help survives process restart");
                 result.putString("summary", "PASS: " + checks + " restart assertions"); finish(Activity.RESULT_OK, result); return;
             }
-            screenshot("forest-native-intro.png");
+            screenshot("forest-native-intro.jpg");
             click("#begin"); await("!document.getElementById('dialogue').hidden"); click("#dialogue-next");
             check("\"river\"".equals(js("document.getElementById('game').dataset.phase")), "accepting the post starts journey");
-            click("[data-secret='0']"); screenshot("forest-native-path.png");
+            click("[data-secret='0']"); screenshot("forest-native-path.jpg");
             click("#next-place"); await("!document.getElementById('dialogue').hidden"); click("#dialogue-next");
             await("document.getElementById('game').dataset.puzzle === 'river'");
             click("[data-choice='lamp']"); check("\"river\"".equals(js("document.getElementById('game').dataset.phase")), "wrong item cannot cross river");
             click("#puzzle-repeat"); check("false".equals(js("JSON.parse(ForestHost.load()).helped.river")), "repeat does not reveal answer");
-            screenshot("forest-native-river.png"); click("#help"); click("[data-choice='lemonade']");
+            screenshot("forest-native-river.jpg"); click("#help"); click("[data-choice='lemonade']");
             check("\"treehouse\"".equals(js("document.getElementById('game').dataset.phase")), "correct word unlocks crossing");
             click("#success-next"); await("!document.getElementById('dialogue').hidden"); click("#dialogue-next");
-            await("document.getElementById('game').dataset.puzzle === 'house'"); screenshot("forest-native-house.png");
+            await("document.getElementById('game').dataset.puzzle === 'house'"); screenshot("forest-native-house.jpg");
             for (String letter : new String[]{"M", "O", "A"}) click("[data-letter='" + letter + "']");
             check("\"treehouse\"".equals(js("document.getElementById('game').dataset.phase")), "wrong letter order cannot finish story");
             for (int i = 0; i < 3; i++) click("#undo-letter");
             for (String letter : new String[]{"O", "M", "A"}) click("[data-letter='" + letter + "']");
             check("\"complete\"".equals(js("document.getElementById('game').dataset.phase")), "Oma receives post");
-            click("#success-next"); await("!document.getElementById('ending').hidden"); screenshot("forest-native-ending.png");
+            click("#success-next"); await("!document.getElementById('ending').hidden"); screenshot("forest-native-ending.jpg");
             check(getTargetContext().getSharedPreferences("forest-story-v1", 0).edit().commit(), "flush chapter before process death");
             result.putString("summary", "PASS: " + checks + " offline Android chapter assertions"); finish(Activity.RESULT_OK, result);
         } catch (Throwable error) {
-            try { if (web != null) screenshot("forest-failure.png"); } catch (Exception ignored) { }
+            try { if (web != null) screenshot("forest-failure.jpg"); } catch (Exception ignored) { }
             result.putString("error", android.util.Log.getStackTraceString(error)); finish(Activity.RESULT_CANCELED, result);
         }
     }

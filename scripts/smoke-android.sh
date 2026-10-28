@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 APP=de.meiapps.leseabenteuer
+# The game also adapts to portrait; take comparable landscape screenshots in CI.
+adb shell settings put system accelerometer_rotation 0
+adb shell settings put system user_rotation 1
 VERSION="$(sed -n 's/^versionName=//p' version.properties)"
 SDK="${ANDROID_SDK_ROOT:?Set SDK}"
 "$SDK/build-tools/36.0.0/apksigner" sign --ks .signing/keystore.p12 --ks-key-alias leseabenteuer --ks-pass file:.signing/password --out build/upgrade-fixture.apk dist/MeiLeseAbenteuer-0.1.0.apk
@@ -22,9 +25,9 @@ if ! grep -Eq 'PASS:' build/android-play.log || grep -Eq 'error=|INSTRUMENTATION
 python3 - <<'PYIMAGES'
 import re,base64,pathlib
 text=pathlib.Path('build/android-play.log').read_text()
-for name,data in re.findall(r'INSTRUMENTATION_STATUS: image_([a-z0-9.-]+\.png)=([A-Za-z0-9+/=]+)',text):
+for name,data in re.findall(r'INSTRUMENTATION_STATUS: image_([a-z0-9.-]+\.(?:png|jpg))=([A-Za-z0-9+/=]+)',text):
  pathlib.Path('build',name).write_bytes(base64.b64decode(data,validate=True))
-assert pathlib.Path('build/forest-native-intro.png').is_file(), 'Missing home screenshot'
+assert pathlib.Path('build/forest-native-intro.jpg').is_file(), 'Missing rendered forest screenshot'
 PYIMAGES
 adb shell am force-stop "$APP"
 adb shell am instrument -w -e phase reopen "$APP.tests/de.meiapps.leseabenteuer.SmokeInstrumentation" > build/android-reopen.log

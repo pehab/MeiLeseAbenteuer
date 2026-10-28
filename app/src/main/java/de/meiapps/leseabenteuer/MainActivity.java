@@ -146,8 +146,13 @@ public final class MainActivity extends Activity {
     }
     private void parentSettings() {
         inParents = true; updates.resume();
-        new AlertDialog.Builder(this).setTitle("MeiLeseAbenteuer · Für Große")
-                .setItems(new String[]{"Erster Waldabschnitt · erste Wörter", voiceReady ? "Deutsche Offline-Stimme testen" : "Deutsche Offline-Stimme einrichten", "Updates", "Diesen Waldabschnitt neu beginnen"}, (d, n) -> {
+        AlertDialog menu = new AlertDialog.Builder(this).setTitle("MeiLeseAbenteuer · Für Große")
+                .setItems(new String[]{"Erster Waldabschnitt · erste Wörter", voiceReady ? "Deutsche Offline-Stimme testen" : "Deutsche Offline-Stimme einrichten", "Updates", "Diesen Waldabschnitt neu beginnen"}, null)
+                .setNegativeButton("Zurück in den Wald", null).create();
+        menu.setOnDismissListener(d -> { inParents = false; updates.pause(); });
+        menu.show();
+        // Keep the gated menu open underneath subdialogs and the update/install flow.
+        menu.getListView().setOnItemClickListener((parent, row, n, id) -> {
                     if (n == 0) new AlertDialog.Builder(this).setTitle("Die erste Sternenpost")
                             .setMessage("Dieser erste spielbare Abschnitt erprobt die neue Spielwelt. Er enthält die Wörter LIMO und OMA sowie drei versteckte Glühwürmchen. Eine vollständige Einführung der Buchstaben folgt später. Hilf mir spricht das gesuchte Wort vor. Dafür ist eine installierte deutsche Offline-Stimme nötig. Ohne Stimme bitte gemeinsam spielen. Alte Lernstände werden nicht in die neue Geschichte übernommen und bleiben unberührt.")
                             .setPositiveButton("Verstanden", null).show();
@@ -158,8 +163,7 @@ public final class MainActivity extends Activity {
                     } else if (n == 2) updates.settings();
                     else new AlertDialog.Builder(this).setTitle("Waldabschnitt neu beginnen?").setMessage("Die Sternenpost und die drei Glühwürmchen beginnen von vorn.")
                             .setNegativeButton("Abbrechen", null).setPositiveButton("Neu beginnen", (x, y) -> { preferences.edit().remove("chapter").apply(); web.reload(); }).show();
-                }).setNegativeButton("Zurück in den Wald", null)
-                .setOnDismissListener(d -> { inParents = false; updates.pause(); }).show();
+                });
     }
     final class ForestBridge {
         @JavascriptInterface public String load() { return preferences.getString("chapter", "{}"); }

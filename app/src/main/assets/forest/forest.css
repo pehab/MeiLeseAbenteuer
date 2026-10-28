@@ -16,3 +16,17 @@
 
 /* Android 11's bundled WebView supports grid gap but predates flex gap. */
 .no-flex-gap nav>*+*{margin-left:10px}.no-flex-gap #chapter>span+span{margin-left:10px}.no-flex-gap .primary>span{margin-left:calc(25px * var(--ui))}.no-flex-gap .choices>*+*{margin-left:calc(17px * var(--ui))}.no-flex-gap .riddle-row>.note{margin-left:calc(25px * var(--ui))}.no-flex-gap .address-row>.envelope{margin-left:calc(25px * var(--ui))}.no-flex-gap .letter-choices>*+*{margin-left:calc(16px * var(--ui))}.no-flex-gap #letter-slots>*+*{margin-left:calc(12px * var(--ui))}.no-flex-gap .puzzle-top>div{margin-left:calc(18px * var(--ui));margin-right:calc(18px * var(--ui))}.no-flex-gap .dialogue-copy{margin-right:15px}.no-flex-gap .dialogue>.primary{margin-left:15px}.no-flex-gap #feedback{margin:0 15px}.no-flex-gap #objective>*+*{margin-left:12px}
+/* Use transforms for animated sprites on WebViews before individual translate/scale support. */
+#fox.facing-left{--face:-1}
+@keyframes breathe{0%,100%{transform:translateY(0) scaleX(var(--face,1))}50%{transform:translateY(-4px) scaleX(var(--face,1)) scale(1.008,1.015)}}
+@keyframes walk{from{transform:translateY(0) rotate(-1deg) scaleX(var(--face,1))}to{transform:translateY(-10px) rotate(2deg) scaleX(var(--face,1))}}
+@keyframes attention{50%{transform:translateY(-8px)}}
+@keyframes sun{to{opacity:.55;transform:translateX(25px)}}
+@keyframes drift{to{transform:translate(38px,-60px);opacity:.2}}
+@keyframes glimmer{50%{opacity:.45;transform:translateY(-7px) scale(.83)}}
+@keyframes float{50%{transform:translateY(-6px)}}
+@keyframes shake{25%,75%{transform:translateX(-7px)}50%{transform:translateX(7px)}}
+
+.carried-gift{position:fixed;z-index:12;pointer-events:none;object-fit:contain;filter:drop-shadow(0 8px 12px #50614155)}
+
+.orientation-tip{display:none}@media(max-aspect-ratio:1/1){#intro .orientation-tip{display:block;font-size:12px;opacity:.7;margin-top:18px}}

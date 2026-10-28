@@ -154,9 +154,9 @@
         if (busy || $('game').dataset.puzzle !== 'river') return;
         if (!story.advance(kind)) { feedback(button, 'Schau noch einmal auf das Wort. Du kannst dir helfen lassen.'); return; }
         button.classList.add('selected'); save(); update();
-        success('Genau, eine Limo!', 'Taro freut sich. Jetzt kann die Sternenpost über den Bach.', () => {
+        carryPicture(canvas, document.querySelector('.puzzle-frog'), () => success('Genau, eine Limo!', 'Taro freut sich. Jetzt kann die Sternenpost über den Bach.', () => {
           closePuzzle(); moveTo(1560, 760, () => { dialogue('TARO', 'Festhalten! Die Sternenpost ist drüben. Da oben ist schon das Baumhaus!', 'Zum Baumhaus', () => moveTo(2080, 565, openHouse), 5); });
-        });
+        }));
       }; $('object-choices').append(button);
     });
   }
@@ -206,6 +206,21 @@
   function feedback(element, message) {
     element.classList.remove('wrong'); void element.offsetWidth; element.classList.add('wrong');
     $('feedback').textContent = message; say(message);
+  }
+  function carryPicture(canvas, destination, after) {
+    if (reduceMotion || !canvas.animate) { after(); return; }
+    busy = true;
+    const from = canvas.getBoundingClientRect(), to = destination.getBoundingClientRect();
+    const gift = document.createElement('canvas'); gift.width = canvas.width; gift.height = canvas.height;
+    gift.getContext('2d').drawImage(canvas, 0, 0);
+    gift.className = 'carried-gift';
+    gift.style.cssText = `left:${from.left}px;top:${from.top}px;width:${from.width}px;height:${from.height}px`;
+    $('game').append(gift);
+    const flight = gift.animate([
+      { transform: 'translate(0,0) scale(1)', opacity: 1 },
+      { transform: `translate(${to.left + to.width / 2 - from.left - from.width / 2}px,${to.top + to.height / 2 - from.top - from.height / 2}px) scale(.45) rotate(-12deg)`, opacity: .9 }
+    ], { duration: 650, easing: 'ease-in-out', fill: 'forwards' });
+    flight.onfinish = () => { gift.remove(); after(); };
   }
   function success(title, text, action) {
     busy = true; $('puzzle-success').hidden = false; $('success-title').textContent = title; $('success-text').textContent = text;
