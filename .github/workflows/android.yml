@@ -55,6 +55,10 @@ jobs:
         # AGP calls Gradle's deprecated Configuration.setVisible API.
         # Report plugin deprecations; Java and Android lint still fail on warnings.
         run: bash gradlew --no-daemon --warning-mode=all assembleDebug lintDebug
+      - name: Print lint diagnostics
+        if: always()
+        run: |
+          if [ -f app/build/reports/lint-results-debug.txt ]; then cat app/build/reports/lint-results-debug.txt; fi
       - name: Enable emulator acceleration
         if: always() && steps.native.outcome == 'success'
         run: |

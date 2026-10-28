@@ -3,6 +3,13 @@
   const $ = id => document.getElementById(id);
   const { Story, shuffled } = ForestStory;
   const host = window.ForestHost;
+  // Detect flex layout spacing rather than relying on a WebView version number.
+  const flexProbe = document.createElement('div');
+  flexProbe.style.cssText = 'display:flex;flex-direction:column;row-gap:1px;position:absolute;visibility:hidden';
+  for (let i = 0; i < 2; i++) { const child = document.createElement('i'); child.style.height = '1px'; flexProbe.append(child); }
+  document.body.append(flexProbe);
+  document.body.classList.toggle('no-flex-gap', flexProbe.scrollHeight !== 3);
+  flexProbe.remove();
   let restored;
   try { restored = JSON.parse(host ? host.load() : localStorage.getItem('forest-chapter-1')); } catch (_) { restored = null; }
   const story = new Story(restored);

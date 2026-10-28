@@ -35,6 +35,12 @@ public final class SmokeInstrumentation extends Instrumentation {
         Thread.sleep(100);
     }
     private void screenshot(String name) throws Exception {
+        CountDownLatch painted = new CountDownLatch(1);
+        runOnMainSync(() -> web.postVisualStateCallback(System.nanoTime(), new WebView.VisualStateCallback() {
+            @Override public void onComplete(long requestId) { painted.countDown(); }
+        }));
+        check(painted.await(5, TimeUnit.SECONDS), "WebView painted the current DOM");
+        Thread.sleep(250);
         getUiAutomation().waitForIdle(300, 3000);
         Bitmap bitmap = getUiAutomation().takeScreenshot(); check(bitmap != null, "screenshot available");
         ByteArrayOutputStream bytes = new ByteArrayOutputStream(); bitmap.compress(Bitmap.CompressFormat.PNG, 100, bytes); bitmap.recycle();
@@ -51,6 +57,7 @@ public final class SmokeInstrumentation extends Instrumentation {
             activity = (MainActivity) startActivitySync(new Intent(getTargetContext(), MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             java.lang.reflect.Field field = MainActivity.class.getDeclaredField("web"); field.setAccessible(true); web = (WebView) field.get(activity);
             await("document.getElementById('game') && document.getElementById('game').dataset.ready === 'true'");
+            check("true".equals(js("document.getElementById('viewport').getBoundingClientRect().width > 100 && document.getElementById('viewport').getBoundingClientRect().height > 100 && document.querySelector('.landscape').naturalWidth > 100")), "the illustrated world has a visible nonzero viewport");
             if ("upgrade".equals(args.getString("phase"))) {
                 check("Upgrade-Test".equals(legacy.getString("p0.name", "")) && legacy.getInt("p0.stars", 0) == 7, "old progress remains unmodified");
                 check("\"meeting\"".equals(js("document.getElementById('game').dataset.phase")), "new chapter starts independently from old rewards");

@@ -117,6 +117,8 @@ public final class MainActivity extends Activity {
                     .setPositiveButton("Schließen", (dialog, which) -> finish()).show();
         });
     }
+    // API 33+ uses the registered native OnBackInvokedCallback; this is only the API 26–32 fallback.
+    @SuppressLint("GestureBackNavigation")
     @SuppressWarnings("deprecation")
     @Override public void onBackPressed() { back(); }
     @Override protected void onPause() {
