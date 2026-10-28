@@ -30,19 +30,24 @@ public final class SmokeInstrumentation extends Instrumentation {
             Thread.sleep(scrolled?200:100);
         }throw new AssertionError("Action not reachable: "+text);
     }
-    private String choice(Learning.Question q,String option){return q.mode==Learning.Mode.INITIAL?Learning.sound(option).example:q.mode==Learning.Mode.READ?Learning.word(option).text:option;}
+    private String choice(Learning.Question q,String option){return q.mode==Learning.Mode.INITIAL?Learning.sound(option).example:q.mode==Learning.Mode.READ?Learning.word(option).text:q.mode==Learning.Mode.ALPHABET?option.toLowerCase(Locale.GERMAN):option;}
     private void screenshot(String name)throws Exception{android.graphics.Bitmap bitmap=getUiAutomation().takeScreenshot();if(bitmap!=null){ByteArrayOutputStream bytes=new ByteArrayOutputStream();bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,bytes);bitmap.recycle();Bundle snapshot=new Bundle();snapshot.putString("image_"+name,android.util.Base64.encodeToString(bytes.toByteArray(),android.util.Base64.NO_WRAP));sendStatus(0,snapshot);}}
     @Override public void onStart(){Bundle result=new Bundle();try{
         Context context=getTargetContext();activity=(MainActivity)startActivitySync(new Intent(context,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));waitForIdleSync();Thread.sleep(1000);
         Progress progress=(Progress)field("progress");
         if("seed".equals(args.getString("phase"))){runOnMainSync(()->{progress.name("Update-Kind");progress.record("LISTEN:M",false);progress.finish(5);});check(context.getSharedPreferences("learning-v1",0).edit().commit(),"upgrade fixture flushed to disk before stopping instrumentation");result.putString("summary","PASS: seeded existing child profile for upgrade");finish(Activity.RESULT_OK,result);return;}
         if("upgrade".equals(args.getString("phase"))){check(progress.name().equals("Update-Kind"),"child name survives APK update (actual: "+progress.name()+", rounds: "+progress.rounds()+")");check(progress.stars()==1&&progress.completed()==1,"progress survives APK update");check(progress.get("LISTEN:M").independent==1,"individual skill history survives update");result.putString("summary","PASS: "+checks+" upgrade preservation assertions");finish(Activity.RESULT_OK,result);return;}
-        if("reopen".equals(args.getString("phase"))){check(progress.profile()==0,"selected profile persists");check(progress.stars()==4&&progress.rounds()==4,"completed rounds and rewards persist after process restart");check(progress.completed()==4,"independent rounds persist");check(Learning.known(progress.completed())==4,"letter progression persists");result.putString("summary","PASS: "+checks+" restart assertions");finish(Activity.RESULT_OK,result);return;}
+        if("reopen".equals(args.getString("phase"))){check(progress.profile()==0,"selected profile persists");check(progress.stars()==7&&progress.rounds()==7,"completed rounds and rewards persist after process restart");check(progress.completed()==4,"independent rounds persist");check(Learning.known(progress.completed())==4,"letter progression persists");result.putString("summary","PASS: "+checks+" restart assertions");finish(Activity.RESULT_OK,result);return;}
         check(progress.stars()==0,"fresh installation has no rewards");screenshot("home.png");
-        String[] names={"Laute lauschen","Bildersuche","Laute verbinden","Wörter entdecken"};
-        for(int mode=0;mode<4;mode++){
-            tap(names[mode]);Learning.Question q=(Learning.Question)field("question");check(q.mode.ordinal()==mode,"requested game opens");
-            Learning.Round round=(Learning.Round)field("round");String wrong=null;for(String option:q.options)if(!option.equals(q.target)){wrong=option;break;}tap(choice(q,wrong),q.mode==Learning.Mode.INITIAL||q.mode==Learning.Mode.READ);check(round.assisted&&round.answered==0,"wrong answer helps instead of advancing");
+        String[] names={"Laute lauschen","Bildersuche","Laute verbinden","Wörter entdecken","Buchstabenpaare","Mengen zählen","Zahlen finden"};
+        for(int mode=0;mode<names.length;mode++){
+            tap(names[mode]);Learning.Question q=null;
+            for(int attempt=0;attempt<100;attempt++){waitForIdleSync();q=(Learning.Question)field("question");if(q!=null&&q.mode.ordinal()==mode)break;Thread.sleep(50);}
+            check(q!=null&&q.mode.ordinal()==mode,"requested game opens after the accessibility action");
+            Learning.Round round=(Learning.Round)field("round");
+            tap("Aufgabe noch einmal hören");check(!round.assisted,"repeat is independent and does not expose the solution");
+            if(mode==2||mode==3){tap("Hilf mir: gemeinsam lösen");check(round.assisted&&(Boolean)field("hint"),"help reveals the solution and marks the attempt assisted");}
+            String wrong=null;for(String option:q.options)if(!option.equals(q.target)){wrong=option;break;}tap(choice(q,wrong),q.mode==Learning.Mode.INITIAL||q.mode==Learning.Mode.READ);check(round.assisted&&round.answered==0,"wrong answer helps instead of advancing");
             for(int n=0;n<6;n++){
                 q=(Learning.Question)field("question");String label=choice(q,q.target);tap(label,q.mode==Learning.Mode.INITIAL||q.mode==Learning.Mode.READ);check(round.answered==n+1,"real tap advances exactly once");
                 if(n==0)check(round.independent==0,"retry is not counted as independent");
@@ -51,9 +56,12 @@ public final class SmokeInstrumentation extends Instrumentation {
             }
             check(progress.stars()==mode+1,"one reward per finished round");tap("Zur Lichtung");
         }
-        check(progress.completed()==4,"eligible rounds unlock one additional letter");
+        check(progress.completed()==4,"number and alphabet rounds do not advance phonics progression");
+        check(progress.numberCompleted()==2,"number rounds have separate progress");
+        tap("Meine Waldtiere");screenshot("album.png");tap("Milo");tap("Zurück zur Abenteuerkarte");
+        tap("ABC entdecken");screenshot("alphabet.png");tap("Z, Zebra");tap("Zurück zur Abenteuerkarte");
         runOnMainSync(()->progress.profile(1));check(progress.stars()==0&&progress.completed()==0,"other child has independent progress");
-        runOnMainSync(()->progress.profile(0));check(progress.stars()==4,"original child progress preserved");java.lang.reflect.Method home=MainActivity.class.getDeclaredMethod("home",boolean.class);home.setAccessible(true);runOnMainSync(()->{try{home.invoke(activity,false);}catch(Exception e){throw new RuntimeException(e);}});waitForIdleSync();
+        runOnMainSync(()->progress.profile(0));check(progress.stars()==7,"original child progress preserved");java.lang.reflect.Method home=MainActivity.class.getDeclaredMethod("home",boolean.class);home.setAccessible(true);runOnMainSync(()->{try{home.invoke(activity,false);}catch(Exception e){throw new RuntimeException(e);}});waitForIdleSync();
         screenshot("home-progress.png");check(context.getSharedPreferences("learning-v1",0).edit().commit(),"profile data flushed before restart check");result.putString("summary","PASS: "+checks+" Android interaction assertions");finish(Activity.RESULT_OK,result);
     }catch(Throwable error){try{screenshot("failure.png");}catch(Exception ignored){}result.putString("error",android.util.Log.getStackTraceString(error));finish(Activity.RESULT_CANCELED,result);}}
 }

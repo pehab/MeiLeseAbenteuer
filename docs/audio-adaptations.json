@@ -1,11 +1,11 @@
 {
   "m": {
     "source_section_seconds": [
-      0.24,
-      0.37
+      1.265,
+      1.465
     ],
-    "adaptation": "isolated consonant segment repeated with crossfades to 0.6 seconds; gain normalization; 20ms fade in/out",
-    "sha256": "972f2c37846e1ab3889f0b4fa19e4c27339611daa7f8f4b63084792e1244b69e"
+    "adaptation": "natural nasal segment; no looping or time stretching; gain normalization and 5ms edge fades",
+    "sha256": "c24242808561aa4cef97f86f40b8f147661b3003ea9379f2847c7946b9f1dc4d"
   },
   "l": {
     "source_section_seconds": [

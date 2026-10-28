@@ -19,5 +19,12 @@ final class Progress implements Learning.Memory {
     public Learning.Stats get(String key){Learning.Stats stats=cache.get(key);if(stats!=null)return stats;stats=new Learning.Stats();stats.seen=Math.max(0,prefs.getInt(prefix()+key+".seen",0));stats.independent=Math.max(0,prefs.getInt(prefix()+key+".independent",0));stats.needsHelp=Math.max(0,prefs.getInt(prefix()+key+".help",0));cache.put(key,stats);return stats;}
     void record(String key,boolean assisted){Learning.Stats s=get(key);s.record(assisted);prefs.edit().putInt(prefix()+key+".seen",s.seen).putInt(prefix()+key+".independent",s.independent).putInt(prefix()+key+".help",s.needsHelp).apply();}
     void finish(int independent){prefs.edit().putInt(prefix()+"rounds",rounds()+1).putInt(prefix()+"stars",stars()+1).putInt(prefix()+"independentRounds",completed()+(independent>=4?1:0)).apply();}
+    int numberCompleted(){return Math.max(0,prefs.getInt(prefix()+"numberRounds",0));}
+    void finish(Learning.Mode mode,int independent){
+        if(mode.ordinal()<4){finish(independent);return;}
+        SharedPreferences.Editor edit=prefs.edit().putInt(prefix()+"rounds",rounds()+1).putInt(prefix()+"stars",stars()+1);
+        if(Learning.isNumber(mode)&&independent>=4)edit.putInt(prefix()+"numberRounds",numberCompleted()+1);
+        edit.apply();
+    }
     void reset(){SharedPreferences.Editor e=prefs.edit();for(String key:prefs.getAll().keySet())if(key.startsWith(prefix()))e.remove(key);e.apply();cache.clear();}
 }

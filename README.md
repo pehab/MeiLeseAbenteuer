@@ -1,6 +1,16 @@
 # MeiLeseAbenteuer
 
-Eine native Android-App für einen spielerischen Einstieg ins deutsche Lesen. Milo, ein kleiner Fuchs, begleitet kurze Runden mit sechs Aufgaben. Erste Repo-Fassung **0.1.1** (Update der vorab bereitgestellten 0.1.0); noch kein auf einem Kindergerät erprobtes Lernprogramm.
+Eine native Android-App für einen spielerischen Einstieg ins deutsche Lesen. Milo, ein kleiner Fuchs, begleitet kurze Runden mit sechs Aufgaben. Erste Repo-Fassung **0.2.0** (Update der vorab bereitgestellten 0.1.0); noch kein auf einem Kindergerät erprobtes Lernprogramm.
+
+## Neu: Milos Waldtier-Abenteuer
+
+Die Abenteuerkarte führt durch sechs Gebiete. Vier Abenteuersterne pro Gebiet retten einen Waldtierfreund für das Sammelalbum. Nach 24 Sternen sind alle sechs Freunde gefunden; die Spiele bleiben frei spielbar. Bereits vorhandene Sterne zählen mit. Große Bildbuttons, ein Startpfeil, Haus, Wiederholungspfeil und Hilfelampe führen durch die Kindoberfläche. Aufgaben werden automatisch gesprochen; eine deutsche Offline-Stimme muss eingerichtet sein.
+
+Das ABC ist frei erkundbar: 26 Buchstaben, Ä, Ö, Ü sowie ß mit Beispiel „Fuß“. Bei Groß-/Kleinbuchstabenpaaren werden Buchstabennamen gesprochen. Diese Aktivität ist von den acht aufgenommenen Lauten der Laut- und Silbenspiele getrennt.
+
+Zwei neue Zahlenspiele lassen Kinder Beeren zählen und gesprochene Zahlen finden. Sie starten mit 1–5; nach jeweils drei erfolgreichen Zahlenrunden wächst der Zahlenraum um eins bis 10. Zählhilfe durch Antippen gilt als unterstützt. Zahlenrunden und ABC-Paare erhöhen den Lesefortschritt nicht.
+
+Wiederholung verrät beim Lesen kein Lösungswort und markiert keine Hilfe. Die Hilfelampe erklärt die Lösung, hebt die passende Antwort hervor und zählt den Versuch als unterstützt. Das M verwendet ein natürliches Nasalsegment ohne Audioschleife. Die Lautqualität muss weiterhin auf dem tatsächlichen Kindergerät geprüft werden.
 
 ## Spielarten
 
@@ -44,7 +54,7 @@ Benötigt werden Java 17, Android-Plattform 37.0 und Build Tools 36.0.0. Der dir
 - Die pure Java-Suite prüft unter anderem zulässige Wörter, Distraktoren, Wiederholungen, Fehlversuche und doppelte Antworten.
 - Die Update-Vertragssuite prüft Quellenauswahl, Metadaten und manipulierte APK-Inhalte.
 - Der native Build und die enthaltenen, für Android direkt lesbaren Audiodateien wurden geprüft.
-- Die CI führt Build, Gradle/Lint und echte Interaktionstests auf Android 11 und 17 aus: alle vier Spiele, Fehlversuche und Hilfestellungen, getrennte Profile, Belohnungen und Wiederherstellung nach Prozessneustart.
+- Die CI führt Build, Gradle/Lint und echte Interaktionstests auf Android 11 und 17 aus: alle sieben Spiele, Fehlversuche und Hilfestellungen, getrennte Profile, Belohnungen und Wiederherstellung nach Prozessneustart.
 - Der Update-Gerätetest legt Daten unter der vorherigen 0.1.0-Version an, installiert 0.1.1 darüber und prüft den erhaltenen Namen, Fortschritt und Lernverlauf.
 - Screenshots aus den Gerätetests werden vor dem Merge visuell geprüft. Release-Paket und Metadaten werden anschließend erneut geprüft; die Veröffentlichung erfolgt nur nach erfolgreicher CI.
 - **Gemeinsam noch zu erproben:** Verständlichkeit der Lautaufnahmen, Qualität der installierten deutschen Stimme und der passende Schwierigkeitsgrad für das Kind. Ein grüner Emulator-Test ersetzt diesen Hör- und Praxistest nicht.

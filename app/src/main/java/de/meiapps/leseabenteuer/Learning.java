@@ -5,7 +5,7 @@ import java.util.*;
 /** Android-free learning content and progression. Never generates words from unknown letters. */
 public final class Learning {
     private Learning() { }
-    public enum Mode { LISTEN, INITIAL, BLEND, READ }
+    public enum Mode { LISTEN, INITIAL, BLEND, READ, ALPHABET, COUNT, NUMBER }
     public static final class Sound {
         public final String letter,example,picture;
         Sound(String letter,String example,String picture){this.letter=letter;this.example=example;this.picture=picture;}
@@ -21,6 +21,11 @@ public final class Learning {
     public static final List<Word> WORDS=Collections.unmodifiableList(Arrays.asList(
         new Word("Mama","mother"),new Word("Oma","grandmother"),new Word("Lama","llama"),
         new Word("Milo","fox"),new Word("Limo","lemonade"),new Word("Ufo","ufo")));
+    public static final String ALPHABET="ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ";
+    public static final String[] NUMBER_NAMES={"null","eins","zwei","drei","vier","fünf","sechs","sieben","acht","neun","zehn"};
+    public static final String[] LETTER_EXAMPLES={"Affe","Ball","Clown","Dach","Elefant","Fisch","Gans","Haus","Igel","Jacke","Katze","Lampe","Maus","Nase","Ofen","Panda","Qualle","Rose","Sonne","Tiger","Uhr","Vogel","Wal","Xylophon","Ypsilon","Zebra","Äpfel","Öl","Überraschung"};
+    public static boolean isNumber(Mode mode){return mode==Mode.COUNT||mode==Mode.NUMBER;}
+    public static int numberLimit(int completed){return Math.min(10,5+Math.max(0,completed)/3);}
     private static final String[] SYLLABLES={"MA","MO","LA","LO","MI","LI","NA","NO","NI","MU","LU","NU","FA","FO","FI","FU"};
     public static int known(int completed){return Math.min(SOUNDS.size(),3+Math.max(0,completed)/3);}
     public static String letters(int completed){StringBuilder s=new StringBuilder();for(int i=0;i<known(completed);i++)s.append(SOUNDS.get(i).letter);return s.toString();}
@@ -39,7 +44,9 @@ public final class Learning {
     }
     public static Question next(Mode mode,int completed,Memory memory,Random random,String previous){
         List<String> candidates=new ArrayList<>();Map<String,String> pictures=new HashMap<>();
-        if(mode==Mode.BLEND)candidates.addAll(syllables(completed));
+        if(isNumber(mode)){for(int n=1;n<=numberLimit(completed);n++)candidates.add(String.valueOf(n));}
+        else if(mode==Mode.ALPHABET){for(char letter:ALPHABET.toCharArray())candidates.add(String.valueOf(letter));}
+        else if(mode==Mode.BLEND)candidates.addAll(syllables(completed));
         else if(mode==Mode.READ){for(Word w:words(completed)){candidates.add(w.text);pictures.put(w.text,w.picture);}}
         else for(int i=0;i<known(completed);i++){Sound s=SOUNDS.get(i);candidates.add(s.letter);pictures.put(s.letter,s.picture);}
         if(candidates.isEmpty())throw new IllegalArgumentException("No content for current progress");
