@@ -147,7 +147,7 @@ public final class MainActivity extends Activity {
     private void parentSettings() {
         inParents = true; updates.resume();
         AlertDialog menu = new AlertDialog.Builder(this).setTitle("MeiLeseAbenteuer · Für Große")
-                .setItems(new String[]{"Buchstabenpfad · acht erste Buchstaben", voiceReady ? "Deutsche Offline-Stimme testen" : "Deutsche Offline-Stimme einrichten", "Updates", "Buchstabenpfad und Sternenpost neu beginnen"}, null)
+                .setItems(new String[]{"Buchstabenpfad · acht erste Buchstaben", voiceReady ? "Deutsche Offline-Stimme testen" : "Deutsche Offline-Stimme einrichten", "Updates", "Buchstabenpfad und Sternenpost neu beginnen", "Quellen der Lautaufnahmen"}, null)
                 .setNegativeButton("Zurück in den Wald", null).create();
         menu.setOnDismissListener(d -> { inParents = false; updates.pause(); });
         menu.show();
@@ -161,9 +161,18 @@ public final class MainActivity extends Activity {
                         else try { startActivity(new Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA)); }
                         catch (android.content.ActivityNotFoundException e) { Toast.makeText(this, "Bitte eine deutsche Offline-Stimme in den Android-Spracheinstellungen installieren.", Toast.LENGTH_LONG).show(); }
                     } else if (n == 2) updates.settings();
-                    else new AlertDialog.Builder(this).setTitle("Waldabschnitt neu beginnen?").setMessage("Die acht Buchstabenkapitel, die Sternenpost und die drei Glühwürmchen beginnen von vorn.")
+                    else if (n == 3) new AlertDialog.Builder(this).setTitle("Waldabschnitt neu beginnen?").setMessage("Die acht Buchstabenkapitel, die Sternenpost und die drei Glühwürmchen beginnen von vorn.")
                             .setNegativeButton("Abbrechen", null).setPositiveButton("Neu beginnen", (x, y) -> { preferences.edit().remove("chapter-after-letters").remove("letters").apply(); web.reload(); }).show();
+                    else new AlertDialog.Builder(this).setTitle("Lautaufnahmen · CC BY-SA 3.0").setMessage(audioCredits()).setPositiveButton("Zurück", null).show();
                 });
+    }
+    private String audioCredits() {
+        try (java.io.InputStream input = getAssets().open("AUDIO-CREDITS.txt")) {
+            java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+            byte[] buffer = new byte[4096]; int count;
+            while ((count = input.read(buffer)) != -1) bytes.write(buffer, 0, count);
+            return new String(bytes.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (IOException ignored) { return "Die Quellenangaben konnten nicht geladen werden."; }
     }
     final class ForestBridge {
         @JavascriptInterface public String loadLetters() { return preferences.getString("letters", "{}"); }

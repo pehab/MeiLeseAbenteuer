@@ -12,7 +12,7 @@ Geschaffte Buchstabenkapitel sind über das Blattsymbol wiederholbar. Der Stand 
 
 ## Audio
 
-Die vorhandenen Dateien `sounds/a.ogg`, `i.ogg`, `o.ogg`, `u.ogg`, `m.ogg`, `n.ogg` und `l.ogg` sind wieder eingebunden. E und die Erzählung werden mit einer deutschen Geräte-Offlinestimme gesprochen. Bei fehlender Stimme im Elternbereich eine deutsche Offline-Stimme einrichten. Die Lauttaste für Konsonanten verwendet die Aufnahme, nicht den Namen „em“, „en“ oder „el“. Die Dateien stammen unverändert aus der bisherigen App; Quellenhinweise sind unter `audio-originals` bzw. in der Git-Historie dokumentiert.
+Die vorhandenen Dateien `sounds/a.ogg`, `i.ogg`, `o.ogg`, `u.ogg`, `m.ogg`, `n.ogg` und `l.ogg` sind wieder eingebunden. E und die Erzählung werden mit einer deutschen Geräte-Offlinestimme gesprochen. Bei fehlender Stimme im Elternbereich eine deutsche Offline-Stimme einrichten. Die Lauttaste für Konsonanten verwendet die Aufnahme, nicht den Namen „em“, „en“ oder „el“. Die Dateien stammen unverändert aus der bisherigen App. Die menschlichen Aufnahmen von Denelson83 und Peter Isotalo stehen unter CC BY-SA 3.0; Originalquellen und Bearbeitungen stehen in `app/src/main/assets/AUDIO-CREDITS.txt`, `docs/audio-sources.json` und `docs/audio-adaptations.json`. Die Namensnennung und Lizenz sind auch im Erwachsenenbereich unter „Quellen der Lautaufnahmen“ lesbar.
 
 ## Entwicklung und Prüfungen
 
