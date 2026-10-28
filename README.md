@@ -44,7 +44,12 @@ Benötigt werden Java 17, Android-Plattform 37.0 und Build Tools 36.0.0. Der dir
 - Die pure Java-Suite prüft unter anderem zulässige Wörter, Distraktoren, Wiederholungen, Fehlversuche und doppelte Antworten.
 - Die Update-Vertragssuite prüft Quellenauswahl, Metadaten und manipulierte APK-Inhalte.
 - Der native Build und die enthaltenen, für Android direkt lesbaren Audiodateien wurden geprüft.
-- **Noch offen:** visueller Test und echter Bedienungstest auf Android 11/17, Rotation, Prozessneustart und Hörtest der Aussprache mit einer deutschen Offline-Stimme. Die Instrumentation und der Android-11/17-Prüflauf sind vorbereitet und lokal kompiliert. Der erste GitHub-Prüflauf soll vor einem Merge erfolgen. Gradle/Lint ließ sich lokal noch nicht starten, weil der Gradle-Download in der Java-Laufzeit keine Netzwerkverbindung bekam.
+- Die CI führt Build, Gradle/Lint und echte Interaktionstests auf Android 11 und 17 aus: alle vier Spiele, Fehlversuche und Hilfestellungen, getrennte Profile, Belohnungen und Wiederherstellung nach Prozessneustart.
+- Der Update-Gerätetest legt Daten unter der vorherigen 0.1.0-Version an, installiert 0.1.1 darüber und prüft den erhaltenen Namen, Fortschritt und Lernverlauf.
+- Screenshots aus den Gerätetests werden vor dem Merge visuell geprüft. Release-Paket und Metadaten werden anschließend erneut geprüft; die Veröffentlichung erfolgt nur nach erfolgreicher CI.
+- **Gemeinsam noch zu erproben:** Verständlichkeit der Lautaufnahmen, Qualität der installierten deutschen Stimme und der passende Schwierigkeitsgrad für das Kind. Ein grüner Emulator-Test ersetzt diesen Hör- und Praxistest nicht.
+
+Details zum Update-Verhalten, zur Signierung und zu den Prüfgrenzen stehen in [docs/UPDATES.md](docs/UPDATES.md).
 
 ## Inhalte und Quellen
 
