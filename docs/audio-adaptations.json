@@ -1,0 +1,34 @@
+{
+  "m": {
+    "source_section_seconds": [
+      0.24,
+      0.37
+    ],
+    "adaptation": "isolated consonant segment repeated with crossfades to 0.6 seconds; gain normalization; 20ms fade in/out",
+    "sha256": "972f2c37846e1ab3889f0b4fa19e4c27339611daa7f8f4b63084792e1244b69e"
+  },
+  "l": {
+    "source_section_seconds": [
+      0.26,
+      0.4
+    ],
+    "adaptation": "isolated consonant segment repeated with crossfades to 0.6 seconds; gain normalization; 20ms fade in/out",
+    "sha256": "5ba3c65c3e4f62c42df0b0d4cf815492ea91f4ae28691d58a84f9ed3af2fde6d"
+  },
+  "n": {
+    "source_section_seconds": [
+      0.29,
+      0.44
+    ],
+    "adaptation": "isolated consonant segment repeated with crossfades to 0.6 seconds; gain normalization; 20ms fade in/out",
+    "sha256": "2a6b3644badaadd12122e5257580b93f1a3fdfbf279b7166176ce10b2e1c39c0"
+  },
+  "f": {
+    "source_section_seconds": [
+      0.25,
+      0.46
+    ],
+    "adaptation": "isolated consonant segment repeated with crossfades to 0.6 seconds; gain normalization; 20ms fade in/out",
+    "sha256": "cc2c959e4abdb63683f0f432160c650645c14654608f60d0a44497f726798cd4"
+  }
+}

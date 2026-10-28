@@ -1,0 +1,113 @@
+name: Android
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [30, '37.0']
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Test content and progression
+        run: bash test.sh
+      - name: Test update verification
+        run: |
+          bash scripts/test-update-contract.sh
+          python3 scripts/check-release-metadata.py
+      - name: Install Android SDK components
+        run: |
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          MANAGER=$(find "$SDK/cmdline-tools" -name sdkmanager -type f | sort -V | tail -n 1)
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          "$MANAGER" 'platforms;android-37.0' 'build-tools;36.0.0' 'emulator' 'system-images;android-${{ matrix.api }};google_apis;x86_64'
+      - name: Restore release key when available
+        if: github.event_name != 'pull_request'
+        env:
+          MEILESE_SIGNING_JSON: ${{ secrets.MEILESE_SIGNING_JSON }}
+        run: python3 scripts/restore-signing.py
+      - name: Build native APK
+        id: native
+        run: |
+          bash build-local.sh
+          bash test-android-build.sh
+      - name: Gradle build and lint
+        # AGP calls Gradle's deprecated Configuration.setVisible API.
+        # Report plugin deprecations; Java and Android lint still fail on warnings.
+        run: bash gradlew --no-daemon --warning-mode=all assembleDebug lintDebug
+      - name: Enable emulator acceleration
+        if: always() && steps.native.outcome == 'success'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Offline Android interaction and restart checks
+        if: always() && steps.native.outcome == 'success'
+        env:
+          TEST_API: ${{ matrix.api }}
+        run: bash scripts/run-emulator.sh
+      - name: Package source-matching signed release
+        run: python3 scripts/prepare-release.py
+      - uses: actions/upload-artifact@v6
+        with:
+          name: verified-release-${{ matrix.api }}
+          path: build/release/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: validation-${{ matrix.api }}
+          path: |
+            app/build/reports/
+            build/*.png
+            build/android-*.log
+
+  verify-release-package:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+    steps:
+      - name: Download validated release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh run download "$GITHUB_RUN_ID" --name verified-release-30 --dir build/release
+      - name: Check checksum
+        working-directory: build/release
+        run: sha256sum --check *.apk.sha256
+  publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release]')
+    needs: verify-release-package
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v6
+      - name: Download validated release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh run download "$GITHUB_RUN_ID" --name verified-release-30 --dir build/release
+      - name: Publish source-matching signed APK and update feed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          VERSION=$(sed -n 's/^versionName=//p' version.properties)
+          (cd build/release && sha256sum --check "MeiLeseAbenteuer-$VERSION.apk.sha256")
+          if ! gh release view "v$VERSION" >/dev/null 2>&1; then
+            gh release create "v$VERSION" "build/release/MeiLeseAbenteuer-$VERSION.apk" "build/release/MeiLeseAbenteuer-$VERSION.apk.sha256" build/release/MeiLeseAbenteuer-update.json --target "$GITHUB_SHA" --title "MeiLeseAbenteuer $VERSION" --notes-file "docs/RELEASE-$VERSION.md"
+          fi
