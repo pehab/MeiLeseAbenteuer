@@ -8,6 +8,7 @@ import android.view.*;
 final class PlayArt extends View {
     private final Paint p=new Paint(3);private final Path path=new Path();
     private final String kind;private final int value;
+    PlayArt(Context context){this(context,"star",0);}
     PlayArt(Context context,String kind,int value){super(context);this.kind=kind;this.value=value;setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);}
     private void fill(int color){p.setStyle(Paint.Style.FILL);p.setColor(color);}
     private void oval(Canvas c,float x,float y,float rx,float ry,int color){fill(color);c.drawOval(x-rx,y-ry,x+rx,y+ry,p);}

@@ -44,8 +44,13 @@ public final class MainActivity extends Activity {
     private LinearLayout row(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.HORIZONTAL);v.setGravity(Gravity.CENTER_VERTICAL);return v;}
     private void page(String name){
         screen=name;updates.pause();answers.clear();voice.stop();scroll=new ScrollView(this);scroll.setBackgroundColor(CREAM);scroll.setFillViewport(true);
-        content=column();content.setPadding(dp(20),dp(18),dp(20),dp(24));scroll.addView(content);setContentView(scroll);
-        scroll.setOnApplyWindowInsetsListener((v,insets)->{if(Build.VERSION.SDK_INT>=30){android.graphics.Insets bars=insets.getInsets(WindowInsets.Type.systemBars()|WindowInsets.Type.displayCutout());v.setPadding(bars.left,bars.top,bars.right,bars.bottom);}else legacyInsets(v,insets);return insets;});scroll.requestApplyInsets();
+        content=column();content.setPadding(dp(20),dp(18),dp(20),dp(24));scroll.addView(content);
+        LinearLayout shell=column();shell.setBackgroundColor(CREAM);shell.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
+        if(!name.equals("home")&&!name.equals("done")){
+            LinearLayout navigation=row();navigation.setGravity(Gravity.CENTER);navigation.setPadding(0,dp(4),0,dp(4));
+            navigation.addView(symbol("Zurück zur Abenteuerkarte","home",this::back,0xffc9e9e0),new LinearLayout.LayoutParams(dp(84),dp(58)));shell.addView(navigation);
+        }setContentView(shell);
+        shell.setOnApplyWindowInsetsListener((v,insets)->{if(Build.VERSION.SDK_INT>=30){android.graphics.Insets bars=insets.getInsets(WindowInsets.Type.systemBars()|WindowInsets.Type.displayCutout());v.setPadding(bars.left,bars.top,bars.right,bars.bottom);}else legacyInsets(v,insets);return insets;});shell.requestApplyInsets();
     }
     @SuppressWarnings("deprecation") private void legacyInsets(View v,WindowInsets insets){v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());}
     private TextView label(String value,int size,int color){TextView t=new TextView(this);t.setText(value);t.setTextSize(size);t.setTextColor(color);t.setFontFeatureSettings("kern");return t;}
@@ -54,7 +59,7 @@ public final class MainActivity extends Activity {
     private Button button(String text,Runnable action,boolean primary){Button b=new Button(this);b.setText(text);b.setAllCaps(false);b.setTextSize(17);bold(b);b.setTextColor(primary?Color.WHITE:INK);b.setBackground(bg(primary?GREEN:0xffe6ecd9,0));b.setMinHeight(dp(58));b.setPadding(dp(12),dp(10),dp(12),dp(10));b.setOnClickListener(v->action.run());return b;}
     private void addButton(String text,Runnable action,boolean primary){Button b=button(text,action,primary);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.topMargin=dp(10);content.addView(b,p);}
     private void title(String title,String subtitle){TextView t=label(title,28,INK);bold(t);content.addView(t);TextView sub=label(subtitle,15,MUTED);sub.setPadding(0,dp(6),0,dp(16));content.addView(sub);}
-    private void header(String subtitle){LinearLayout row=row();Button back=symbol("Zurück zur Abenteuerkarte","home",this::back,0xffc9e9e0);back.setTextSize(14);back.setMinHeight(dp(48));row.addView(back,new LinearLayout.LayoutParams(dp(70),dp(58)));TextView name=label(subtitle,14,MUTED);name.setGravity(Gravity.END);row.addView(name,new LinearLayout.LayoutParams(0,-2,1));content.addView(row);gap(14);}
+    private void header(String subtitle){TextView name=label(subtitle,16,MUTED);name.setGravity(Gravity.END);content.addView(name);gap(12);}
     private void gap(int height){content.addView(new View(this),new LinearLayout.LayoutParams(1,dp(height)));}
     private android.graphics.drawable.Drawable icon(String kind,int size){
         int px=dp(size);android.graphics.Bitmap bitmap=android.graphics.Bitmap.createBitmap(px,px,android.graphics.Bitmap.Config.ARGB_8888);
