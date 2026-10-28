@@ -131,7 +131,7 @@
   }
   function destination() {
     if (modal || busy) return;
-    if (story.phase === 'meeting') moveTo(680, 800, nila);
+    if (story.phase === 'meeting') moveTo(470, 800, nila);
     else if (story.phase === 'river') moveTo(1120, 820, frog);
     else moveTo(2080, 565, () => { if (story.phase === 'treehouse') openHouse(); else showEnding(); });
   }
@@ -237,7 +237,7 @@
   }
   $('begin').onclick = () => {
     initAudio(); started = true; $('intro').hidden = true; update();
-    if (story.phase === 'meeting') moveTo(680, 800, nila);
+    if (story.phase === 'meeting') moveTo(470, 800, nila);
     else if (story.phase === 'complete') showEnding();
     else say(story.phase === 'river' ? 'Die Sternenpost wartet. Taro, der Frosch, ist am Bach.' : 'Du bist fast da! Bringe die Sternenpost zum Baumhaus.');
   };
