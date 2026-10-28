@@ -1,67 +1,90 @@
 package de.meiapps.leseabenteuer;
 
-import android.app.*;
-import android.content.*;
-import android.os.*;
-import android.view.accessibility.AccessibilityNodeInfo;
-import java.io.*;
-import java.util.*;
+import android.app.Activity;
+import android.app.Instrumentation;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.os.Bundle;
+import android.webkit.WebView;
+import java.io.ByteArrayOutputStream;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
-/** Device-level checks use real taps and the native accessibility tree, including scrollable layouts. */
+/** Runs the bundled chapter in Android's real WebView, without network connectivity. */
 public final class SmokeInstrumentation extends Instrumentation {
-    private Bundle args;private MainActivity activity;private int checks;
-    @Override public void onCreate(Bundle args){this.args=args;start();}
-    private void check(boolean ok,String name){checks++;if(!ok)throw new AssertionError(name);}
-    private Object field(String name)throws Exception{java.lang.reflect.Field f=MainActivity.class.getDeclaredField(name);f.setAccessible(true);return f.get(activity);}
-    private void call(String name)throws Exception{java.lang.reflect.Method m=MainActivity.class.getDeclaredMethod(name);m.setAccessible(true);runOnMainSync(()->{try{m.invoke(activity);}catch(Exception e){throw new RuntimeException(e);}});waitForIdleSync();}
-    private void tap(String text)throws Exception{tap(text,false,false);}
-    private void tap(String text,boolean picture)throws Exception{tap(text,picture,true);}
-    private void tap(String text,boolean picture,boolean choice)throws Exception{
-        for(int attempt=0;attempt<35;attempt++){
-            AccessibilityNodeInfo root=getUiAutomation().getRootInActiveWindow();List<AccessibilityNodeInfo> nodes=new ArrayList<>();if(root!=null)nodes.add(root);
-            for(int i=0;i<nodes.size();i++){AccessibilityNodeInfo n=nodes.get(i);for(int j=0;j<n.getChildCount();j++){AccessibilityNodeInfo c=n.getChild(j);if(c!=null)nodes.add(c);}
-                if(!text.contentEquals(n.getText()==null?"":n.getText())&&!text.contentEquals(n.getContentDescription()==null?"":n.getContentDescription()))continue;
-                if(picture&&!"android.widget.LinearLayout".contentEquals(n.getClassName()))continue;
-                if(choice&&!picture&&!"android.widget.Button".contentEquals(n.getClassName()))continue;
-                AccessibilityNodeInfo target=n;while(target!=null&&!target.isClickable())target=target.getParent();
-                if(target!=null&&target.isEnabled()&&target.isVisibleToUser()&&target.performAction(AccessibilityNodeInfo.ACTION_CLICK)){waitForIdleSync();Thread.sleep(100);return;}
-            }
-            boolean scrolled=false;for(AccessibilityNodeInfo n:nodes)if(n.isScrollable()&&n.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)){scrolled=true;break;}
-            Thread.sleep(scrolled?200:100);
-        }throw new AssertionError("Action not reachable: "+text);
+    private Bundle args;
+    private MainActivity activity;
+    private WebView web;
+    private int checks;
+    @Override public void onCreate(Bundle args) { this.args = args; start(); }
+    private void check(boolean value, String message) { checks++; if (!value) throw new AssertionError(message); }
+    private String js(String script) throws Exception {
+        String[] result = new String[1]; CountDownLatch latch = new CountDownLatch(1);
+        runOnMainSync(() -> web.evaluateJavascript(script, value -> { result[0] = value; latch.countDown(); }));
+        if (!latch.await(10, TimeUnit.SECONDS)) throw new AssertionError("WebView callback timeout");
+        return result[0];
     }
-    private String choice(Learning.Question q,String option){return q.mode==Learning.Mode.INITIAL?Learning.sound(option).example:q.mode==Learning.Mode.READ?Learning.word(option).text:q.mode==Learning.Mode.ALPHABET?option.toLowerCase(Locale.GERMAN):option;}
-    private void screenshot(String name)throws Exception{android.graphics.Bitmap bitmap=getUiAutomation().takeScreenshot();if(bitmap!=null){ByteArrayOutputStream bytes=new ByteArrayOutputStream();bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,bytes);bitmap.recycle();Bundle snapshot=new Bundle();snapshot.putString("image_"+name,android.util.Base64.encodeToString(bytes.toByteArray(),android.util.Base64.NO_WRAP));sendStatus(0,snapshot);}}
-    @Override public void onStart(){Bundle result=new Bundle();try{
-        Context context=getTargetContext();activity=(MainActivity)startActivitySync(new Intent(context,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));waitForIdleSync();Thread.sleep(1000);
-        Progress progress=(Progress)field("progress");
-        if("seed".equals(args.getString("phase"))){runOnMainSync(()->{progress.name("Update-Kind");progress.record("LISTEN:M",false);progress.finish(5);});check(context.getSharedPreferences("learning-v1",0).edit().commit(),"upgrade fixture flushed to disk before stopping instrumentation");result.putString("summary","PASS: seeded existing child profile for upgrade");finish(Activity.RESULT_OK,result);return;}
-        if("upgrade".equals(args.getString("phase"))){check(progress.name().equals("Update-Kind"),"child name survives APK update (actual: "+progress.name()+", rounds: "+progress.rounds()+")");check(progress.stars()==1&&progress.completed()==1,"progress survives APK update");check(progress.get("LISTEN:M").independent==1,"individual skill history survives update");result.putString("summary","PASS: "+checks+" upgrade preservation assertions");finish(Activity.RESULT_OK,result);return;}
-        if("reopen".equals(args.getString("phase"))){check(progress.profile()==0,"selected profile persists");check(progress.stars()==7&&progress.rounds()==7,"completed rounds and rewards persist after process restart");check(progress.completed()==4,"independent rounds persist");check(Learning.known(progress.completed())==4,"letter progression persists");result.putString("summary","PASS: "+checks+" restart assertions");finish(Activity.RESULT_OK,result);return;}
-        check(progress.stars()==0,"fresh installation has no rewards");screenshot("home.png");
-        String[] names={"Laute lauschen","Bildersuche","Laute verbinden","Wörter entdecken","Buchstabenpaare","Mengen zählen","Zahlen finden"};
-        for(int mode=0;mode<names.length;mode++){
-            tap(names[mode]);Learning.Question q=null;
-            for(int attempt=0;attempt<100;attempt++){waitForIdleSync();q=(Learning.Question)field("question");if(q!=null&&q.mode.ordinal()==mode)break;Thread.sleep(50);}
-            check(q!=null&&q.mode.ordinal()==mode,"requested game opens after the accessibility action");
-            Learning.Round round=(Learning.Round)field("round");
-            tap("Aufgabe noch einmal hören");check(!round.assisted,"repeat is independent and does not expose the solution");
-            if(mode==2||mode==3){tap("Hilf mir: gemeinsam lösen");check(round.assisted&&(Boolean)field("hint"),"help reveals the solution and marks the attempt assisted");}
-            String wrong=null;for(String option:q.options)if(!option.equals(q.target)){wrong=option;break;}tap(choice(q,wrong),q.mode==Learning.Mode.INITIAL||q.mode==Learning.Mode.READ);check(round.assisted&&round.answered==0,"wrong answer helps instead of advancing");
-            for(int n=0;n<6;n++){
-                q=(Learning.Question)field("question");String label=choice(q,q.target);tap(label,q.mode==Learning.Mode.INITIAL||q.mode==Learning.Mode.READ);check(round.answered==n+1,"real tap advances exactly once");
-                if(n==0)check(round.independent==0,"retry is not counted as independent");
-                if(n==0)screenshot("game-"+mode+".png");
-                tap(n==5?"Mein Abenteuerstern":"Weiter →");
+    private void await(String expression) throws Exception {
+        for (int i = 0; i < 120; i++) { if ("true".equals(js("Boolean(" + expression + ")"))) return; Thread.sleep(100); }
+        throw new AssertionError("Timed out: " + expression + "\n" + js("document.body.innerText"));
+    }
+    private void click(String selector) throws Exception {
+        await("document.querySelector(" + org.json.JSONObject.quote(selector) + ") && !document.querySelector(" + org.json.JSONObject.quote(selector) + ").disabled");
+        js("document.querySelector(" + org.json.JSONObject.quote(selector) + ").click()");
+        Thread.sleep(100);
+    }
+    private void screenshot(String name) throws Exception {
+        getUiAutomation().waitForIdle(300, 3000);
+        Bitmap bitmap = getUiAutomation().takeScreenshot(); check(bitmap != null, "screenshot available");
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream(); bitmap.compress(Bitmap.CompressFormat.PNG, 100, bytes); bitmap.recycle();
+        Bundle image = new Bundle(); image.putString("image_" + name, android.util.Base64.encodeToString(bytes.toByteArray(), android.util.Base64.NO_WRAP)); sendStatus(0, image);
+    }
+    @Override public void onStart() {
+        Bundle result = new Bundle();
+        try {
+            SharedPreferences legacy = getTargetContext().getSharedPreferences("learning-v1", 0);
+            if ("seed".equals(args.getString("phase"))) {
+                check(legacy.edit().putString("p0.name", "Upgrade-Test").putInt("p0.stars", 7).commit(), "seed legacy preferences");
+                result.putString("summary", "PASS: legacy update fixture seeded"); finish(Activity.RESULT_OK, result); return;
             }
-            check(progress.stars()==mode+1,"one reward per finished round");tap("Zur Lichtung");
+            activity = (MainActivity) startActivitySync(new Intent(getTargetContext(), MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            java.lang.reflect.Field field = MainActivity.class.getDeclaredField("web"); field.setAccessible(true); web = (WebView) field.get(activity);
+            await("document.getElementById('game') && document.getElementById('game').dataset.ready === 'true'");
+            if ("upgrade".equals(args.getString("phase"))) {
+                check("Upgrade-Test".equals(legacy.getString("p0.name", "")) && legacy.getInt("p0.stars", 0) == 7, "old progress remains unmodified");
+                check("\"meeting\"".equals(js("document.getElementById('game').dataset.phase")), "new chapter starts independently from old rewards");
+                result.putString("summary", "PASS: " + checks + " update assertions"); finish(Activity.RESULT_OK, result); return;
+            }
+            if ("reopen".equals(args.getString("phase"))) {
+                check("\"complete\"".equals(js("document.getElementById('game').dataset.phase")), "chapter survives process restart");
+                click("#begin"); await("!document.getElementById('ending').hidden");
+                check("true".equals(js("JSON.parse(ForestHost.load()).helped.river")), "help survives process restart");
+                result.putString("summary", "PASS: " + checks + " restart assertions"); finish(Activity.RESULT_OK, result); return;
+            }
+            screenshot("forest-native-intro.png");
+            click("#begin"); await("!document.getElementById('dialogue').hidden"); click("#dialogue-next");
+            check("\"river\"".equals(js("document.getElementById('game').dataset.phase")), "accepting the post starts journey");
+            click("[data-secret='0']"); screenshot("forest-native-path.png");
+            click("#next-place"); await("!document.getElementById('dialogue').hidden"); click("#dialogue-next");
+            await("document.getElementById('game').dataset.puzzle === 'river'");
+            click("[data-choice='lamp']"); check("\"river\"".equals(js("document.getElementById('game').dataset.phase")), "wrong item cannot cross river");
+            click("#puzzle-repeat"); check("false".equals(js("JSON.parse(ForestHost.load()).helped.river")), "repeat does not reveal answer");
+            screenshot("forest-native-river.png"); click("#help"); click("[data-choice='lemonade']");
+            check("\"treehouse\"".equals(js("document.getElementById('game').dataset.phase")), "correct word unlocks crossing");
+            click("#success-next"); await("!document.getElementById('dialogue').hidden"); click("#dialogue-next");
+            await("document.getElementById('game').dataset.puzzle === 'house'"); screenshot("forest-native-house.png");
+            for (String letter : new String[]{"M", "O", "A"}) click("[data-letter='" + letter + "']");
+            check("\"treehouse\"".equals(js("document.getElementById('game').dataset.phase")), "wrong letter order cannot finish story");
+            for (int i = 0; i < 3; i++) click("#undo-letter");
+            for (String letter : new String[]{"O", "M", "A"}) click("[data-letter='" + letter + "']");
+            check("\"complete\"".equals(js("document.getElementById('game').dataset.phase")), "Oma receives post");
+            click("#success-next"); await("!document.getElementById('ending').hidden"); screenshot("forest-native-ending.png");
+            check(getTargetContext().getSharedPreferences("forest-story-v1", 0).edit().commit(), "flush chapter before process death");
+            result.putString("summary", "PASS: " + checks + " offline Android chapter assertions"); finish(Activity.RESULT_OK, result);
+        } catch (Throwable error) {
+            try { if (web != null) screenshot("forest-failure.png"); } catch (Exception ignored) { }
+            result.putString("error", android.util.Log.getStackTraceString(error)); finish(Activity.RESULT_CANCELED, result);
         }
-        check(progress.completed()==4,"number and alphabet rounds do not advance phonics progression");
-        check(progress.numberCompleted()==2,"number rounds have separate progress");
-        tap("Meine Waldtiere");screenshot("album.png");tap("Milo");tap("Zurück zur Abenteuerkarte");
-        tap("ABC entdecken");screenshot("alphabet.png");tap("Z, Zebra");tap("Zurück zur Abenteuerkarte");
-        runOnMainSync(()->progress.profile(1));check(progress.stars()==0&&progress.completed()==0,"other child has independent progress");
-        runOnMainSync(()->progress.profile(0));check(progress.stars()==7,"original child progress preserved");java.lang.reflect.Method home=MainActivity.class.getDeclaredMethod("home",boolean.class);home.setAccessible(true);runOnMainSync(()->{try{home.invoke(activity,false);}catch(Exception e){throw new RuntimeException(e);}});waitForIdleSync();
-        screenshot("home-progress.png");check(context.getSharedPreferences("learning-v1",0).edit().commit(),"profile data flushed before restart check");result.putString("summary","PASS: "+checks+" Android interaction assertions");finish(Activity.RESULT_OK,result);
-    }catch(Throwable error){try{screenshot("failure.png");}catch(Exception ignored){}result.putString("error",android.util.Log.getStackTraceString(error));finish(Activity.RESULT_CANCELED,result);}}
+    }
 }

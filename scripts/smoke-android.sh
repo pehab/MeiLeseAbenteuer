@@ -24,7 +24,7 @@ import re,base64,pathlib
 text=pathlib.Path('build/android-play.log').read_text()
 for name,data in re.findall(r'INSTRUMENTATION_STATUS: image_([a-z0-9.-]+\.png)=([A-Za-z0-9+/=]+)',text):
  pathlib.Path('build',name).write_bytes(base64.b64decode(data,validate=True))
-assert pathlib.Path('build/home.png').is_file(), 'Missing home screenshot'
+assert pathlib.Path('build/forest-native-intro.png').is_file(), 'Missing home screenshot'
 PYIMAGES
 adb shell am force-stop "$APP"
 adb shell am instrument -w -e phase reopen "$APP.tests/de.meiapps.leseabenteuer.SmokeInstrumentation" > build/android-reopen.log

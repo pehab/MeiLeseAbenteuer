@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'">
+  <title>MeiLeseAbenteuer · Die erste Sternenpost</title>
+  <link rel="stylesheet" href="forest.css">
+</head>
+<body>
+<main id="game" aria-label="Der Geschichtenwald">
+  <div id="viewport">
+    <div id="world">
+      <img class="landscape" src="art/woodland_background.webp" alt="Ein sonniger Waldweg führt am Bach entlang zu einem Baumhaus" draggable="false">
+      <div id="sunbeams" aria-hidden="true"></div>
+      <div id="particles" aria-hidden="true"></div>
+      <div class="house-light" aria-hidden="true"></div>
+      <div id="raft" aria-hidden="true"><i></i><i></i><i></i><span>✦</span></div>
+      <button id="rabbit" class="character resident" aria-label="Mit Nila, dem Hasen, sprechen"><canvas data-animal="1"></canvas><span class="attention">!</span></button>
+      <button id="frog" class="character resident" aria-label="Mit Taro, dem Frosch, sprechen"><canvas data-animal="5"></canvas><span class="attention">?</span></button>
+      <button id="grandma" class="resident" aria-label="Die Empfängerin der Sternenpost"><canvas data-picture="grandmother"></canvas></button>
+      <div id="fox" class="character" aria-hidden="true"><canvas data-animal="0"></canvas><span class="postbag">✦</span></div>
+      <button id="river-stop" class="place" aria-label="Zum Bach gehen"><span class="place-icon">≈</span><span>Zum Bach</span></button>
+      <button id="house-stop" class="place" aria-label="Zum Baumhaus gehen"><span class="place-icon">⌂</span><span>Baumhaus</span></button>
+      <button class="secret secret-0" data-secret="0" aria-label="Ein Glühwürmchen am Baum entdecken">✧</button>
+      <button class="secret secret-1" data-secret="1" aria-label="Ein Glühwürmchen am Bach entdecken">✧</button>
+      <button class="secret secret-2" data-secret="2" aria-label="Ein Glühwürmchen beim Baumhaus entdecken">✧</button>
+    </div>
+  </div>
+  <div class="vignette" aria-hidden="true"></div>
+  <header id="hud">
+    <button id="chapter" aria-label="Zur eigenen Figur zurückkehren"><span class="chapter-leaf">❧</span><span><small>MEILESEABENTEUER</small><strong>Die erste Sternenpost</strong></span></button>
+    <nav aria-label="Einstellungen"><button id="sound" class="round" aria-label="Ton ausschalten" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zM16 8q5 4 0 8M19 5q7 7 0 14"/></svg></button><button id="grownups" class="round" aria-label="Für Große"><svg viewBox="0 0 24 24"><path d="M9 11V7a3 3 0 0 1 6 0v4M6 11h12v10H6z"/></svg></button></nav>
+  </header>
+  <section id="intro" aria-label="Beginn des Abenteuers">
+    <div class="eyebrow">EIN KLEINES WALDABENTEUER</div>
+    <h1>Eine Nachricht.<br>Ein großer <em>Weg.</em></h1>
+    <p>Im Baumhaus wartet jemand auf Post.<br>Und im Wald wartet ein Abenteuer auf dich.</p>
+    <button id="begin" class="primary">Abenteuer beginnen <span>➜</span></button>
+    <div id="continue-note" hidden>Dein Weg geht hier weiter.</div>
+  </section>
+  <div id="objective" hidden><span class="little-star">✦</span><span id="objective-text"></span><span id="discovery-count" aria-label="Entdeckte Glühwürmchen">✧ 0/3</span></div>
+  <div id="explore-hint" hidden>Tippe auf den Weg · Wische, um dich umzusehen</div>
+  <button id="next-place" class="primary" hidden>Zu Nila <span>➜</span></button>
+  <section id="dialogue" class="dialogue" hidden aria-label="Gespräch">
+    <div class="dialogue-portrait"><canvas id="speaker-art"></canvas></div>
+    <div class="dialogue-copy"><small id="speaker"></small><p id="dialogue-text"></p></div>
+    <button id="repeat-dialogue" class="round small-round" aria-label="Gespräch noch einmal hören">↻</button>
+    <button id="dialogue-next" class="primary">Weiter <span>➜</span></button>
+  </section>
+  <section id="puzzle" hidden aria-label="Wald-Rätsel">
+    <div class="puzzle-top"><button id="puzzle-back" class="round" aria-label="Zurück in den Wald">‹</button><div><small id="puzzle-eyebrow"></small><h2 id="puzzle-title"></h2></div><button id="puzzle-repeat" class="round" aria-label="Aufgabe noch einmal hören">↻</button></div>
+    <div id="river-puzzle" hidden>
+      <div class="riddle-row"><canvas class="puzzle-frog" data-animal="5"></canvas><div class="note"><small>TAROS WUNSCHZETTEL</small><strong>LIMO</strong><span>Was steht hier?</span></div></div>
+      <div id="object-choices" class="choices" role="group" aria-label="Was steht auf dem Wunschzettel?"></div>
+    </div>
+    <div id="house-puzzle" hidden>
+      <div class="address-row"><div class="grandma-frame"><canvas data-picture="grandmother"></canvas><span>Für wen ist die Post?</span></div><div class="envelope"><div class="stamp">✦</div><small>DIESE POST IST FÜR</small><div id="letter-slots" aria-label="Name auf dem Brief"></div></div></div>
+      <div id="letter-choices" class="letter-choices" role="group" aria-label="Buchstaben für den Namen"></div>
+      <button id="undo-letter" class="text-button">↶ Letzten Buchstaben zurücklegen</button>
+    </div>
+    <div class="puzzle-bottom"><button id="help" class="help-button">✧ Hilf mir</button><p id="feedback" role="status" aria-live="polite"></p><span class="no-rush">Du hast Zeit.</span></div>
+    <div id="puzzle-success" hidden><span>✦</span><h2 id="success-title"></h2><p id="success-text"></p><button id="success-next" class="primary">Weiter im Abenteuer <span>➜</span></button></div>
+  </section>
+  <section id="ending" hidden aria-label="Kapitel abgeschlossen"><div class="eyebrow">DIE ERSTE STERNENPOST</div><div class="end-stars">✧ ✦ ✧</div><h1>Ein Licht<br>für <em>Oma.</em></h1><p>Die Post ist angekommen.<br>Und im Baumhaus wird es hell.</p><p class="end-discoveries"></p><button id="stay" class="primary">Noch im Wald bleiben <span>❧</span></button><button id="replay" class="text-button">Das Abenteuer noch einmal spielen</button></section>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="loading">Der Geschichtenwald erwacht …</div>
+</main>
+<script src="story.js"></script><script src="forest.js"></script>
+</body>
+</html>
