@@ -14,13 +14,15 @@ public final class SmokeInstrumentation extends Instrumentation {
     private void check(boolean ok,String name){checks++;if(!ok)throw new AssertionError(name);}
     private Object field(String name)throws Exception{java.lang.reflect.Field f=MainActivity.class.getDeclaredField(name);f.setAccessible(true);return f.get(activity);}
     private void call(String name)throws Exception{java.lang.reflect.Method m=MainActivity.class.getDeclaredMethod(name);m.setAccessible(true);runOnMainSync(()->{try{m.invoke(activity);}catch(Exception e){throw new RuntimeException(e);}});waitForIdleSync();}
-    private void tap(String text)throws Exception{tap(text,false);}
-    private void tap(String text,boolean picture)throws Exception{
+    private void tap(String text)throws Exception{tap(text,false,false);}
+    private void tap(String text,boolean picture)throws Exception{tap(text,picture,true);}
+    private void tap(String text,boolean picture,boolean choice)throws Exception{
         for(int attempt=0;attempt<35;attempt++){
             AccessibilityNodeInfo root=getUiAutomation().getRootInActiveWindow();List<AccessibilityNodeInfo> nodes=new ArrayList<>();if(root!=null)nodes.add(root);
             for(int i=0;i<nodes.size();i++){AccessibilityNodeInfo n=nodes.get(i);for(int j=0;j<n.getChildCount();j++){AccessibilityNodeInfo c=n.getChild(j);if(c!=null)nodes.add(c);}
                 if(!text.contentEquals(n.getText()==null?"":n.getText())&&!text.contentEquals(n.getContentDescription()==null?"":n.getContentDescription()))continue;
                 if(picture&&!"android.widget.LinearLayout".contentEquals(n.getClassName()))continue;
+                if(choice&&!picture&&!"android.widget.Button".contentEquals(n.getClassName()))continue;
                 AccessibilityNodeInfo target=n;while(target!=null&&!target.isClickable())target=target.getParent();
                 if(target!=null&&target.isEnabled()&&target.isVisibleToUser()&&target.performAction(AccessibilityNodeInfo.ACTION_CLICK)){waitForIdleSync();Thread.sleep(100);return;}
             }
