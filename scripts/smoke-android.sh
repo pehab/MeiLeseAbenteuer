@@ -18,7 +18,7 @@ adb shell svc wifi disable
 adb shell svc data disable
 adb shell am instrument -w -e phase play "$APP.tests/de.meiapps.leseabenteuer.SmokeInstrumentation" > build/android-play.log
 cat build/android-play.log
-if ! rg -q 'PASS:' build/android-play.log || rg -q 'error=|INSTRUMENTATION_FAILED|Process crashed' build/android-play.log; then exit 1; fi
+if ! grep -Eq 'PASS:' build/android-play.log || grep -Eq 'error=|INSTRUMENTATION_FAILED|Process crashed' build/android-play.log; then exit 1; fi
 python3 - <<'PYIMAGES'
 import re,base64,pathlib
 text=pathlib.Path('build/android-play.log').read_text()
@@ -29,4 +29,4 @@ PYIMAGES
 adb shell am force-stop "$APP"
 adb shell am instrument -w -e phase reopen "$APP.tests/de.meiapps.leseabenteuer.SmokeInstrumentation" > build/android-reopen.log
 cat build/android-reopen.log
-if ! rg -q 'PASS:' build/android-reopen.log || rg -q 'error=|INSTRUMENTATION_FAILED|Process crashed' build/android-reopen.log; then exit 1; fi
+if ! grep -Eq 'PASS:' build/android-reopen.log || grep -Eq 'error=|INSTRUMENTATION_FAILED|Process crashed' build/android-reopen.log; then exit 1; fi
