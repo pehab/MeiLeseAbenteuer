@@ -33,7 +33,7 @@ PY
 "$BT/zipalign" -f -p 4 build/unsigned.apk build/aligned.apk
 if [ ! -f .signing/keystore.p12 ]; then
  python3 -c 'import secrets,pathlib;pathlib.Path(".signing/password").write_text(secrets.token_hex(24))'
- /usr/lib/jvm/java-17-openjdk-amd64/bin/keytool -genkeypair -keystore .signing/keystore.p12 -storetype PKCS12 -storepass:file .signing/password -alias leseabenteuer -keyalg RSA -keysize 3072 -validity 10000 -dname "CN=MeiLeseAbenteuer, OU=meiApps, C=DE" >/dev/null
+ "${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk-amd64}/bin/keytool" -genkeypair -keystore .signing/keystore.p12 -storetype PKCS12 -storepass:file .signing/password -alias leseabenteuer -keyalg RSA -keysize 3072 -validity 10000 -dname "CN=MeiLeseAbenteuer, OU=meiApps, C=DE" >/dev/null
  chmod 600 .signing/*
 fi
 "$BT/apksigner" sign --ks .signing/keystore.p12 --ks-key-alias leseabenteuer --ks-pass file:.signing/password --out "build/MeiLeseAbenteuer-$APP_VERSION.apk" build/aligned.apk
