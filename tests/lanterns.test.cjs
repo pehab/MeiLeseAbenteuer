@@ -28,3 +28,20 @@ test('Wrong answers and help cannot light a lantern; every success survives a re
 test('Malformed and future saves cannot unlock lanterns', () => {
   for (const save of [null, [], 'done', { completed: 9 }, { version: 2, completed: 9 }, ...[-1, 10, 1.2, '9', true, null].map(completed => ({ version: 1, completed }))]) assert.equal(new Lanterns(save).completed, 0);
 });
+
+test('Each completed task can be practised without lowering progress or unlocking later tasks', () => {
+  const chapter = new Lanterns({ version: 1, completed: 3 });
+  assert.equal(chapter.choose(4), false);
+  assert.equal(chapter.choose(3), true);
+  assert.equal(chapter.choose(0), true);
+  assert.equal(chapter.answer('MA'), true);
+  assert.equal(chapter.completed, 3); assert.equal(chapter.index, 1);
+  const resumed = new Lanterns(JSON.parse(chapter.save()));
+  assert.equal(resumed.index, 1); assert.equal(resumed.completed, 3);
+  assert.equal(resumed.choose(3), true); assert.equal(resumed.answer('LA'), true);
+  assert.equal(resumed.completed, 4);
+  const finished = new Lanterns({ version: 1, completed: 9 });
+  assert.equal(finished.choose(6), true); assert.equal(finished.answer('MAMA'), true);
+  assert.equal(finished.completed, 9);
+  assert.equal(new Lanterns({ version: 1, completed: 2, index: 8 }).index, 2);
+});

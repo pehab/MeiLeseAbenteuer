@@ -105,6 +105,11 @@ public final class SmokeInstrumentation extends Instrumentation {
         }
         await("!document.getElementById('lantern-finale').hidden"); screenshot("lanterns-native-complete.jpg");
         click("#lantern-finish");
+        click("#start-lanterns"); await("!document.getElementById('lantern-map').hidden");
+        click("[data-lantern-task='0']"); click("#lantern-options [data-sound='MA']"); click("#lantern-next");
+        check("9".equals(js("JSON.parse(ForestHost.loadLanterns()).completed")), "individual task practice preserves every earned lantern");
+        check("true".equals(js("!document.getElementById('lantern-map').hidden")), "practice returns to task selection");
+        check("true".equals(js("window.forestBack()")), "task selection closes with Android Back");
         check("8".equals(js("JSON.parse(ForestHost.loadLetters()).completed")), "lanterns preserve learned letters");
         check("\"complete\"".equals(js("document.getElementById('game').dataset.phase")), "lanterns preserve completed post");
     }

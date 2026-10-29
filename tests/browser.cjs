@@ -116,6 +116,7 @@ const server = http.createServer((req, res) => {
   // Continue into the new chapter with the real story and letter gates already completed.
   await click('#start-lanterns');
   await page.locator('#lantern').waitFor({ state: 'visible' });
+  await click('#lantern-path'); assert.equal(await page.locator('[data-lantern-task="1"]').isDisabled(), true); await click('[data-lantern-task="0"]');
   assert.equal(await page.locator('#lantern').getAttribute('data-round'), '0');
   await page.screenshot({ path: path.join(output, 'lanterns-blending.png') });
   // Deterministic audio lifecycle: verify recording order and cancellation separately from the reading interaction.
@@ -167,11 +168,22 @@ const server = http.createServer((req, res) => {
   assert.equal(await page.locator('.sound-lantern.lit').count(), 9);
   await page.screenshot({ path: path.join(output, 'lanterns-complete.png') });
   await click('#lantern-finish'); assert.equal(await page.locator('#ending').isVisible(), true);
-  await click('#start-lanterns'); assert.equal(await page.locator('#lantern-finale').isVisible(), true);
-  await click('#lantern-replay'); assert.equal(await page.locator('#lantern').getAttribute('data-round'), '0');
+  await click('#start-lanterns'); assert.equal(await page.locator('#lantern-map').isVisible(), true);
+  await click('[data-lantern-task="0"]'); assert.equal(await page.locator('#lantern').getAttribute('data-round'), '0');
+  await click('#lantern-options [data-sound="MA"]'); await click('#lantern-next');
+  assert.equal(await page.locator('#lantern-map').isVisible(), true);
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('forest-lanterns-1')).completed), 9, 'individual practice preserves earned lanterns');
   await page.keyboard.press('Escape'); assert.equal(await page.locator('#ending').isVisible(), true);
   assert.equal(await phase(), 'complete');
   assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('forest-letters-1')).completed), 8, 'replaying lanterns preserves the earlier chapters');
+  await click('#stay'); await click('#chapter');
+  const storyBeforePractice = await page.evaluate(() => localStorage.getItem('forest-chapter-2'));
+  await click('#lesson-repeat-river'); await click('#help'); await click('[data-choice=lemonade]'); await click('#success-next');
+  assert.equal(await page.evaluate(() => localStorage.getItem('forest-chapter-2')), storyBeforePractice);
+  await click('#stay'); await click('#chapter'); await click('#lesson-repeat-house');
+  for (const letter of ['O', 'M', 'A']) await click(`[data-letter=${letter}]`);
+  await click('#success-next');
+  assert.equal(await page.evaluate(() => localStorage.getItem('forest-chapter-2')), storyBeforePractice, 'individual story practice preserves phase, help and discoveries');
   await context.close();
   for (const [width, height, label] of [[844, 390, 'phone'], [1024, 768, 'tablet'], [390, 844, 'portrait']]) {
     const { page: p, context: c } = await game(width, height, { version: 1, phase: 'treehouse', found: [], helped: {} });
@@ -187,7 +199,7 @@ const server = http.createServer((req, res) => {
       const panel = await p.locator('#lantern').boundingBox();
       assert.equal(await p.locator('#lantern').evaluate(e => e.scrollHeight <= e.clientHeight + 1), true, 'the complete lantern panel fits without hiding its back button');
       assert.ok(panel.x >= 0 && panel.y >= 0 && panel.x + panel.width <= width + 1 && panel.y + panel.height <= height + 1);
-      for (const id of completed === 9 ? ['lantern-finish'] : ['lantern-listen', 'lantern-help']) {
+      for (const id of completed === 9 ? ['lantern-path'] : ['lantern-listen', 'lantern-help']) {
         const control = p.locator('#' + id); await control.scrollIntoViewIfNeeded();
         const bounds = await control.boundingBox(); assert.ok(bounds.y >= panel.y && bounds.y + bounds.height <= panel.y + panel.height + 1, 'lantern controls remain reachable inside their panel');
       }

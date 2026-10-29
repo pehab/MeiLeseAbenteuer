@@ -5,7 +5,7 @@ window.createLanternJourney = function (hooks) {
   let saved;
   try { saved = JSON.parse(host ? host.loadLanterns() : localStorage.getItem('forest-lanterns-1')); } catch (_) { saved = null; }
   const chapter = new Lanterns(saved);
-  let opened = false, solved = false, selected = [], current, phoneme, generation = 0;
+  let opened = false, map = false, reviewing = false, solved = false, selected = [], current, phoneme, generation = 0;
   function stopAudio() { generation++; if (phoneme) { phoneme.pause(); phoneme.onended = null; phoneme.onerror = null; phoneme = null; } hooks.stopSpeech(); $('lantern-sounds').classList.remove('playing'); }
   function speak(text) { stopAudio(); hooks.say(text); }
   function persist() {
@@ -41,7 +41,7 @@ window.createLanternJourney = function (hooks) {
     solved = true; stopAudio(); persist(); lights();
     $('lantern').classList.add('celebrating');
     $('lantern-feedback').textContent = `${current.spoken || current.answer} – eine weitere Laterne leuchtet!`;
-    $('lantern-next').hidden = false; $('lantern-help').disabled = true;
+    $('lantern-next').hidden = false; $('lantern-next').textContent = reviewing ? 'Zur Aufgabenauswahl ❧' : 'Zum nächsten Licht ➜'; $('lantern-help').disabled = true;
     $('lantern-listen').disabled = true; $('lantern-undo').disabled = true;
     $('lantern-options').querySelectorAll('button').forEach(b => { b.disabled = true; });
     hooks.chime(true); hooks.say(`${current.spoken || current.answer.toLowerCase()}. Deine Laterne leuchtet!`);
@@ -52,8 +52,8 @@ window.createLanternJourney = function (hooks) {
     $('lantern-undo').disabled = !selected.length;
   }
   function render() {
-    stopAudio(); solved = false; selected = []; current = chapter.round;
-    $('lantern').dataset.round = chapter.completed;
+    stopAudio(); map = false; $('lantern-map').hidden = true; solved = false; selected = []; current = chapter.round;
+    $('lantern').dataset.round = chapter.index;
     $('lantern').classList.remove('celebrating'); lights();
     $('lantern-feedback').textContent = '';
     $('lantern-next').hidden = true; $('lantern-help').disabled = false;
@@ -85,6 +85,21 @@ window.createLanternJourney = function (hooks) {
     if (current.kind === 'word') wordSlots();
     speak(instruction);
   }
+  function showMap() {
+    stopAudio(); map = true; $('lantern').classList.remove('celebrating');
+    $('lantern-activity').hidden = true; $('lantern-finale').hidden = true; $('lantern-map').hidden = false;
+    $('lantern-title').textContent = 'Deine Klanglaternen'; lights();
+    $('lantern-map-options').textContent = '';
+    rounds.forEach((round, index) => {
+      const b = document.createElement('button'); b.className = 'lantern-map-choice'; b.dataset.lanternTask = index;
+      b.disabled = index > chapter.completed;
+      b.textContent = `${index + 1} · ${round.answer} ${index < chapter.completed ? '✦' : index === chapter.completed ? '➜' : '·'}`;
+      b.setAttribute('aria-label', `${round.answer}${index < chapter.completed ? ', noch einmal üben' : index === chapter.completed ? ', als Nächstes' : ', noch geschlossen'}`);
+      b.onclick = () => { reviewing = index < chapter.completed; if (chapter.choose(index)) { persist(); render(); } };
+      $('lantern-map-options').append(b);
+    });
+    speak('Hier sind deine Klanglaternen. Tippe auf eine erledigte Aufgabe zum Üben oder auf die nächste offene Aufgabe. Deine leuchtenden Laternen bleiben erhalten.');
+  }
   function close() { if (!opened) return false; stopAudio(); opened = false; $('lantern').hidden = true; hooks.closed(); return true; }
   $('lantern-back').onclick = close;
   $('lantern-listen').onclick = listen;
@@ -94,11 +109,12 @@ window.createLanternJourney = function (hooks) {
     $('lantern-feedback').textContent = hint; speak(current.spoken || current.answer.toLowerCase());
   };
   $('lantern-undo').onclick = () => { if (solved || !selected.length) return; const id = selected.pop(); $('lantern-options').querySelector(`[data-piece="${id}"]`).disabled = false; $('lantern-feedback').textContent = ''; wordSlots(); };
-  $('lantern-next').onclick = render;
+  $('lantern-next').onclick = () => { if (reviewing) showMap(); else render(); };
+  $('lantern-path').onclick = showMap;
   $('lantern-finish').onclick = close;
-  $('lantern-replay').onclick = () => { chapter.completed = 0; persist(); render(); };
+  $('lantern-replay').onclick = showMap;
   return {
-    open() { opened = true; hooks.opened(); $('lantern').hidden = false; hooks.paintSprite($('lantern-nila'), 'animal', 1); render(); },
+    open() { opened = true; hooks.opened(); $('lantern').hidden = false; hooks.paintSprite($('lantern-nila'), 'animal', 1); if (chapter.completed === rounds.length) showMap(); else { reviewing = chapter.index < chapter.completed; render(); } },
     back: close, stopAudio, get active() { return opened; }
   };
 };

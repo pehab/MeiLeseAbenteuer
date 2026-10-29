@@ -15,6 +15,7 @@
   const story = new Story(restored);
   let started = false, modal = false, busy = false, muted = false, paused = false, lastSpeech = '', audio, walking = null;
   let foxX = 450, foxY = 800, camera = 0, targetCamera = 0, scale = 1, viewWidth = 1600, lastFrame = 0;
+  let practicePuzzle = false;
   let nextDialogue = null, successAction = null, picked = [], letters = [], drag = null, pan = null, toastTimer, speechTimer;
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const atlas = new Image(), pictures = new Image();
@@ -139,13 +140,14 @@
   function puzzle(kind, eyebrow, title, instruction) {
     modal = true; busy = false; $('game').dataset.puzzle = kind; $('puzzle').hidden = false; $('game').classList.add('puzzling');
     $('river-puzzle').hidden = kind !== 'river'; $('house-puzzle').hidden = kind !== 'house';
-    $('puzzle-success').hidden = true; $('puzzle-eyebrow').textContent = eyebrow; $('puzzle-title').textContent = title;
+    $('puzzle-success').hidden = true; $('puzzle-eyebrow').textContent = eyebrow + (practicePuzzle ? ' · ÜBEN' : ''); $('puzzle-title').textContent = title;
     $('feedback').textContent = ''; $('help').disabled = false; update(); say(instruction);
   }
-  function closePuzzle() { if (busy) return; $('puzzle').hidden = true; $('game').classList.remove('puzzling'); $('game').dataset.puzzle = ''; modal = false; picked = []; stopSpeech(); update(); }
+  function closePuzzle() { if (busy) return; $('puzzle').hidden = true; $('game').classList.remove('puzzling'); $('game').dataset.puzzle = ''; modal = false; picked = []; practicePuzzle = false; stopSpeech(); update(); }
   const riverInstruction = 'Lies das Wort auf Taros Wunschzettel. Tippe auf das passende Bild. Wenn du Hilfe brauchst, tippe auf Hilf mir.';
   const houseInstruction = 'Die Sternenpost ist für Oma. Setze das Wort Oma aus den Buchstaben zusammen. Tippe die Buchstaben an oder ziehe sie auf den Brief.';
-  function openRiver() {
+  function openRiver(practice = false) {
+    practicePuzzle = practice;
     puzzle('river', 'AM BACH · EIN WUNSCHZETTEL', 'Was möchte Taro? ', riverInstruction);
     $('object-choices').textContent = '';
     shuffled([['lamp', 'Lampe'], ['book', 'Buch'], ['lemonade', 'Limo']]).forEach(([kind, label]) => {
@@ -153,16 +155,18 @@
       const canvas = document.createElement('canvas'); paintSprite(canvas, 'picture', kind); button.append(canvas);
       button.onclick = () => {
         if (busy || $('game').dataset.puzzle !== 'river') return;
-        if (!story.advance(kind)) { feedback(button, 'Schau noch einmal auf das Wort. Du kannst dir helfen lassen.'); return; }
-        button.classList.add('selected'); save(); update();
+        if (kind !== 'lemonade' || (!practicePuzzle && !story.advance(kind))) { feedback(button, 'Schau noch einmal auf das Wort. Du kannst dir helfen lassen.'); return; }
+        button.classList.add('selected'); if (!practicePuzzle) save(); update();
         carryPicture(canvas, document.querySelector('.puzzle-frog'), () => success('Genau, eine Limo!', 'Taro freut sich. Jetzt kann die Sternenpost über den Bach.', () => {
+          if (practicePuzzle) { closePuzzle(); if (story.phase === 'complete') showEnding(); return; }
           closePuzzle(); moveTo(1560, 760, () => { dialogue('TARO', 'Festhalten! Die Sternenpost ist drüben. Da oben ist schon das Baumhaus!', 'Zum Baumhaus', () => moveTo(2080, 565, openHouse), 5); });
         }));
       }; $('object-choices').append(button);
     });
   }
-  function openHouse() {
-    if (story.phase !== 'treehouse') return;
+  function openHouse(practice = false) {
+    if (story.phase !== 'treehouse' && !practice) return;
+    practicePuzzle = practice;
     picked = []; letters = shuffled(['O', 'M', 'A', 'I']);
     puzzle('house', 'AM BAUMHAUS · DIE STERNENPOST', 'Für wen ist der Brief?', houseInstruction);
     renderLetters();
@@ -197,8 +201,8 @@
     initAudio(); picked.push(letter); renderLetters(); chime();
     $('feedback').textContent = '';
     if (picked.length === 3) {
-      if (story.advance(picked.join(''))) {
-        save(); update(); success('Die Post ist für Oma!', 'Der Name stimmt. Jetzt findet die Sternenpost ihr Ziel.', () => { closePuzzle(); showEnding(); });
+      if (picked.join('') === 'OMA' && (practicePuzzle || story.advance(picked.join('')))) {
+        if (!practicePuzzle) save(); update(); success('Die Post ist für Oma!', 'Der Name stimmt. Jetzt findet die Sternenpost ihr Ziel.', () => { closePuzzle(); showEnding(); });
       } else {
         feedback($('letter-slots'), 'Das ist noch nicht Oma. Lege Buchstaben zurück und versuche es noch einmal.');
       }
@@ -244,6 +248,8 @@
   };
   const journey = createLetterJourney({
     paintSprite, say, stopSpeech, chime, muted: () => muted,
+    canPractice(kind) { return kind === 'river' ? ['treehouse', 'complete'].includes(story.phase) : story.phase === 'complete'; },
+    practice(kind) { started = true; modal = false; $('intro').hidden = true; if (kind === 'river') openRiver(true); else openHouse(true); },
     opened() { modal = true; $('intro').hidden = true; update(); },
     exited() { modal = false; started = false; $('intro').hidden = false; update(); },
     finished() { modal = false; beginStory(); },
@@ -265,7 +271,7 @@
   $('puzzle-back').onclick = closePuzzle;
   $('puzzle-repeat').onclick = () => say($('puzzle-success').hidden ? ($('game').dataset.puzzle === 'river' ? riverInstruction : houseInstruction) : `${$('success-title').textContent} ${$('success-text').textContent}`);
   $('help').onclick = () => {
-    if (busy) return; story.help(); save();
+    if (busy) return; if (!practicePuzzle) { story.help(); save(); }
     if ($('game').dataset.puzzle === 'river') { $('feedback').textContent = 'Auf dem Zettel steht LIMO. Suche die Limo.'; say('Auf dem Zettel steht Limo. Suche das Bild mit der Limo.'); }
     else { const matches = 'OMA'.startsWith(picked.join('')), next = matches ? 'OMA'[picked.length] : undefined; $('feedback').textContent = `Oma: O – M – A. ${next ? 'Als Nächstes: ' + next : 'Lege die Buchstaben zurück und beginne mit O.'}`; say(matches ? 'Oma. Am Anfang hörst du o. Die Buchstaben stehen hier als Hilfe.' : 'Lege die Buchstaben zurück. Beginne mit o.'); document.querySelectorAll('.letter-tile').forEach(b => b.classList.toggle('hinted', b.dataset.letter === next)); }
   };

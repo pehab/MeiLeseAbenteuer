@@ -183,8 +183,11 @@ public final class MainActivity extends Activity {
                 Object raw = input.get("completed");
                 if (!(raw instanceof Integer) || input.optInt("version") != 1) return;
                 int completed = (Integer) raw;
-                if (completed < 0 || completed > 9) return;
-                preferences.edit().putString("lanterns", new JSONObject().put("version", 1).put("completed", completed).toString()).apply();
+                Object rawIndex = input.has("index") ? input.get("index") : raw;
+                if (!(rawIndex instanceof Integer)) return;
+                int index = (Integer) rawIndex;
+                if (completed < 0 || completed > 9 || index < 0 || index > completed) return;
+                preferences.edit().putString("lanterns", new JSONObject().put("version", 1).put("completed", completed).put("index", index).toString()).apply();
             } catch (JSONException ignored) { /* Keep the last valid lantern save. */ }
         }
         @JavascriptInterface public String loadLetters() { return preferences.getString("letters", "{}"); }
