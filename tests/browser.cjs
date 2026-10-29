@@ -185,6 +185,7 @@ const server = http.createServer((req, res) => {
       await p.evaluate(value => localStorage.setItem('forest-lanterns-1', JSON.stringify({ version: 1, completed: value })), completed);
       await p.reload(); await p.waitForSelector('#game[data-ready=true]'); await p.locator('#begin').click(); await p.locator('#start-lanterns').click();
       const panel = await p.locator('#lantern').boundingBox();
+      assert.equal(await p.locator('#lantern').evaluate(e => e.scrollHeight <= e.clientHeight + 1), true, 'the complete lantern panel fits without hiding its back button');
       assert.ok(panel.x >= 0 && panel.y >= 0 && panel.x + panel.width <= width + 1 && panel.y + panel.height <= height + 1);
       for (const id of completed === 9 ? ['lantern-finish'] : ['lantern-listen', 'lantern-help']) {
         const control = p.locator('#' + id); await control.scrollIntoViewIfNeeded();
