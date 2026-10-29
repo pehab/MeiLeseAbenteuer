@@ -9,7 +9,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -20,8 +20,17 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - name: Test content and progression
         run: bash test.sh
+      - name: Browser interaction and layout checks
+        if: matrix.api == 30
+        run: |
+          npm install --prefix build/browser playwright@1.51.1
+          build/browser/node_modules/.bin/playwright install --with-deps chromium
+          PLAYWRIGHT_MODULE="$PWD/build/browser/node_modules/playwright" node tests/browser.cjs
       - name: Test update verification
         run: |
           bash scripts/test-update-contract.sh
@@ -46,6 +55,10 @@ jobs:
         # AGP calls Gradle's deprecated Configuration.setVisible API.
         # Report plugin deprecations; Java and Android lint still fail on warnings.
         run: bash gradlew --no-daemon --warning-mode=all assembleDebug lintDebug
+      - name: Print lint diagnostics
+        if: always()
+        run: |
+          if [ -f app/build/reports/lint-results-debug.txt ]; then cat app/build/reports/lint-results-debug.txt; fi
       - name: Enable emulator acceleration
         if: always() && steps.native.outcome == 'success'
         run: |
@@ -58,8 +71,10 @@ jobs:
           TEST_API: ${{ matrix.api }}
         run: bash scripts/run-emulator.sh
       - name: Package source-matching signed release
+        if: github.event_name != 'pull_request'
         run: python3 scripts/prepare-release.py
       - uses: actions/upload-artifact@v6
+        if: github.event_name != 'pull_request'
         with:
           name: verified-release-${{ matrix.api }}
           path: build/release/
@@ -71,9 +86,11 @@ jobs:
           path: |
             app/build/reports/
             build/*.png
+            build/*.jpg
             build/android-*.log
 
   verify-release-package:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-24.04
     permissions:

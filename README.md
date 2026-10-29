@@ -1,70 +1,45 @@
-# MeiLeseAbenteuer
+# MeiLeseAbenteuer · Der Geschichtenwald
 
-Eine native Android-App für einen spielerischen Einstieg ins deutsche Lesen. Milo, ein kleiner Fuchs, begleitet kurze Runden mit sechs Aufgaben. Erste Repo-Fassung **0.2.0** (Update der vorab bereitgestellten 0.1.0); noch kein auf einem Kindergerät erprobtes Lernprogramm.
+**Neustart als Spiel.** Aus dem vorherigen Entwurf wurden ausschließlich die vorhandenen Wald-, Tier- und Gegenstandsgrafiken übernommen. Geschichte, Navigation, Begegnungen und Rätsel sind neu. Der erste spielbare Abschnitt heißt **Die erste Sternenpost** (0.4.0, Prototyp).
 
-## Neu: Milos Waldtier-Abenteuer
+Die Android-App öffnet direkt den illustrierten Wald. Ein Fuchs trägt die Sternenpost von Nila zum Baumhaus. Der Weg führt zum Frosch Taro am Bach und weiter zur Empfängerin. Die Figur läuft, die Kamera folgt ihr, Licht und Glühwürmchen bewegen sich. Das Kind kann die Landschaft mit Wischen ansehen, auf dem Weg laufen und drei versteckte Glühwürmchen entdecken. Gelöste Rätsel schalten die Überfahrt frei und lassen am Baumhaus Licht aufgehen.
 
-Die Abenteuerkarte führt durch sechs Gebiete. Vier Abenteuersterne pro Gebiet retten einen Waldtierfreund für das Sammelalbum. Nach 24 Sternen sind alle sechs Freunde gefunden; die Spiele bleiben frei spielbar. Bereits vorhandene Sterne zählen mit. Große Bildbuttons, ein Startpfeil, Haus, Wiederholungspfeil und Hilfelampe führen durch die Kindoberfläche. Aufgaben werden automatisch gesprochen; eine deutsche Offline-Stimme muss eingerichtet sein.
+## Der erste Abschnitt
 
-Das ABC ist frei erkundbar: 26 Buchstaben, Ä, Ö, Ü sowie ß mit Beispiel „Fuß“. Bei Groß-/Kleinbuchstabenpaaren werden Buchstabennamen gesprochen. Diese Aktivität ist von den acht aufgenommenen Lauten der Laut- und Silbenspiele getrennt.
+1. **Nila begegnen:** den Auftrag für die Sternenpost annehmen.
+2. **Taros Wunschzettel:** das Wort **LIMO** lesen und das passende Gegenstandsbild wählen. Falsche Antworten lassen das Rätsel offen. „Hilf mir“ spricht die Lösung vor; die normale Wiederholung erklärt nur den Auftrag.
+3. **Der Brief am Baumhaus:** den Namen **OMA** aus Buchstaben zusammensetzen, durch Antippen oder Ziehen. Buchstaben können zurückgelegt werden. Nur die richtige Reihenfolge stellt die Post zu.
+4. **Ankunft:** die Sternenpost kommt an, im Baumhaus wird es hell. Das Kind kann weiter die Landschaft erkunden oder den Abschnitt neu spielen.
 
-Zwei neue Zahlenspiele lassen Kinder Beeren zählen und gesprochene Zahlen finden. Sie starten mit 1–5; nach jeweils drei erfolgreichen Zahlenrunden wächst der Zahlenraum um eins bis 10. Zählhilfe durch Antippen gilt als unterstützt. Zahlenrunden und ABC-Paare erhöhen den Lesefortschritt nicht.
+Der kurze Abschnitt erprobt **Spielgefühl, Atmosphäre und Bedienung für Kinder mit ersten Wortkenntnissen**. Er ist noch kein vollständiger Lesekurs: Es fehlen insbesondere eine geführte Einführung der Buchstaben, ein systematisches Lautieren und Zusammenschleifen, eine größere Lernfolge und mehr Kapitel. Einzelne Buchstaben werden nicht mit einer allgemeinen TTS-Stimme als vermeintliche Laute vorgesprochen. Die vorhandenen Tierbilder bewegen sich als ganze Figuren; echte Lauf- und Gesichtsanimationsphasen sind noch nicht enthalten.
 
-Wiederholung verrät beim Lesen kein Lösungswort und markiert keine Hilfe. Die Hilfelampe erklärt die Lösung, hebt die passende Antwort hervor und zählt den Versuch als unterstützt. Das M verwendet ein natürliches Nasalsegment ohne Audioschleife. Die Lautqualität muss weiterhin auf dem tatsächlichen Kindergerät geprüft werden.
+## Android und Ton
 
-## Spielarten
+Die gesamte Spieloberfläche und alle Bilder liegen in der APK. Eine Android-WebView stellt die lokale Szene dar; sie lädt ausschließlich über einen abgeriegelten internen HTTPS-Ursprung aus den eingebauten Assets. Datei- und Inhaltszugriffe sowie externe Navigation sind gesperrt. Zum Spielen ist keine Netzwerkverbindung nötig.
 
-- **Laute lauschen:** einen aufgenommenen Laut hören und den passenden Buchstaben antippen.
-- **Bildersuche:** zum gezeigten und gehörten Anfangslaut das richtige Bild finden. Bildnamen sind dabei nicht als Text sichtbar.
-- **Laute verbinden:** zwei Laute einzeln anhören, mit einem Schieberegler verbinden und die passende Silbe auswählen.
-- **Wörter entdecken:** ein Wort selbst lesen und dem Bild zuordnen. Erst die Hilfefunktion spricht das gesuchte Wort vor.
+Deutsche Dialoge, Anleitungen und Hilfen verwenden eine installierte **deutsche Offline-Stimme**. Ohne passende Stimme bitte zunächst gemeinsam spielen. Über das Schloss oben rechts und die Erwachsenenfrage findet man Informationen, den Sprachtest bzw. die Einrichtung, Updates und den Neustart dieses Abschnitts. Glockenklänge werden lokal erzeugt. Der Ton ist abschaltbar und die Einstellung wird gespeichert.
 
-Beginn mit **M, A, O**, danach **L, I, N, U, F**. Es kommen nur Silben und Wörter mit bereits eingeführten Buchstaben vor. Erste Wörter sind Mama und Oma, später Lama, Milo, Limo und Ufo. Keine geratenen Fantasiewörter und keine Sätze mit noch unbekannten Buchstaben.
+Der neue Kapitelstand wird getrennt als `forest-story-v1` gespeichert. Abgeschlossene Begegnungen, benutzte Hilfen und entdeckte Glühwürmchen bleiben erhalten. Alte Lernstände werden weder umgerechnet noch gelöscht. Dieser erste Entwurf verwendet einen gemeinsamen Kapitelstand; mehrere Kinderprofile sind hier noch nicht umgesetzt.
 
-Es gibt keine Uhr, Leben, tägliche Serien, Werbung, Käufe oder Konten. Für jede vollständige Runde gibt es einen Abenteuerstern. Neue Buchstaben folgen nach jeweils drei Runden mit mindestens vier ohne Fehler oder Hilfestellung gelösten Aufgaben. Aufgaben mit Hilfebedarf werden höher gewichtet. Das ist eine einfache Einstiegsregel und ausdrücklich keine Lerndiagnostik.
-
-## Einmalige Einrichtung
-
-1. App installieren und zunächst gemeinsam öffnen.
-2. Unter **Für Große** die Rechenfrage beantworten.
-3. Ein Kinderprofil auswählen und optional einen Spitznamen vergeben. Drei Profile haben getrennte Fortschritte.
-4. **Sprachausgabe testen**. Falls nötig über die Android-Spracheinstellungen eine deutsche Offline-Stimme herunterladen. Danach zurückkehren.
-5. Gemeinsam die Lautaufnahmen unter **Meine Buchstaben entdecken** anhören. Insbesondere die bearbeiteten Konsonanten vor einem eigenständigen Einsatz mit dem Kind auf Verständlichkeit prüfen.
-
-Die acht Lautdateien liegen fest in der APK. Gesprochene Anleitungen, ganze Wörter und Silben verwenden nur eine installierte deutsche TTS-Stimme, die keine Netzwerkverbindung voraussetzt. Ohne passende Stimme bleiben die Bilder und aufgenommenen Laute benutzbar; selbstständige gesprochene Anleitung ist dann noch nicht vollständig verfügbar. Bei stummgeschaltetem Ton sind die Hörspiele gesperrt.
-
-## Elternbereich und Updates
-
-Profile, Namen, Fortschritt, Ton, Sprachtest und das Zurücksetzen eines einzelnen Profils befinden sich im Elternbereich. Die Rechenfrage verhindert versehentliche Zugriffe; sie ist keine Authentifizierung.
-
-Der vorbereitete Updater verwendet die tatsächliche Installationsquelle: Google Play öffnet Google Play, direkt installierte APKs verwenden GitHub. Paketname, Version, Signatur, Größe und SHA-256 werden geprüft. Wie in den anderen MeiApps ist die tägliche Prüfung standardmäßig aktiv und abschaltbar. Manuelle und tägliche Prüfungen werden nur im geöffneten Elternbereich aktiv. Lernspiele brauchen keine Verbindung. Kamera, Mikrofon und Standort werden nicht angefragt.
-
-Repository: https://github.com/pehab/MeiLeseAbenteuer. Der Feed liegt unter `releases/latest/download/MeiLeseAbenteuer-update.json` und wird mit jeder verifizierten Veröffentlichung zusammen mit APK und Prüfsumme aktualisiert.
+Paketname, Signierschlüssel und die Update-Infrastruktur bleiben kompatibel. Der öffentliche Update-Feed wird durch einen Entwicklungsbranch nicht umgestellt. Ein Release wird erst nach erfolgreicher Prüfung veröffentlicht. Details der bestehenden Update-Sicherheitsprüfung: [docs/UPDATES.md](docs/UPDATES.md).
 
 ## Bauen und prüfen
 
 ```sh
 bash test.sh
 bash scripts/test-update-contract.sh
+python3 scripts/check-release-metadata.py
 ANDROID_SDK_ROOT=/path/to/android-sdk bash build-local.sh
+ANDROID_SDK_ROOT=/path/to/android-sdk bash test-android-build.sh
 ```
 
-Benötigt werden Java 17, Android-Plattform 37.0 und Build Tools 36.0.0. Der direkte Build benötigt keine Laufzeitbibliotheken. Die Gradle-Konfiguration ist ebenfalls enthalten. Die Signierung wird bei der ersten lokalen Erstellung in `.signing/` erzeugt; diesen privaten Ordner niemals committen oder öffentlich teilen. Für updatesichere Folgereleases muss derselbe Schlüssel weiterverwendet werden.
+Der direkte Build verwendet Java 17, Android-Plattform 37.0 und Build Tools 36.0.0. Node.js ab Version 18 wird für die Kapiteltests benötigt. Der private Signierordner `.signing/` darf niemals veröffentlicht werden. Updates benötigen denselben Schlüssel wie bisher.
 
-- Die pure Java-Suite prüft unter anderem zulässige Wörter, Distraktoren, Wiederholungen, Fehlversuche und doppelte Antworten.
-- Die Update-Vertragssuite prüft Quellenauswahl, Metadaten und manipulierte APK-Inhalte.
-- Der native Build und die enthaltenen, für Android direkt lesbaren Audiodateien wurden geprüft.
-- Die CI führt Build, Gradle/Lint und echte Interaktionstests auf Android 11 und 17 aus: alle sieben Spiele, Fehlversuche und Hilfestellungen, getrennte Profile, Belohnungen und Wiederherstellung nach Prozessneustart.
-- Der Update-Gerätetest legt Daten unter der vorherigen 0.1.0-Version an, installiert 0.1.1 darüber und prüft den erhaltenen Namen, Fortschritt und Lernverlauf.
-- Screenshots aus den Gerätetests werden vor dem Merge visuell geprüft. Release-Paket und Metadaten werden anschließend erneut geprüft; die Veröffentlichung erfolgt nur nach erfolgreicher CI.
-- **Gemeinsam noch zu erproben:** Verständlichkeit der Lautaufnahmen, Qualität der installierten deutschen Stimme und der passende Schwierigkeitsgrad für das Kind. Ein grüner Emulator-Test ersetzt diesen Hör- und Praxistest nicht.
+Zusätzliche Prüfungen:
 
-Details zum Update-Verhalten, zur Signierung und zu den Prüfgrenzen stehen in [docs/UPDATES.md](docs/UPDATES.md).
+- `tests/story.test.cjs`: Kapitelreihenfolge, falsche und doppelte Antworten, Hilfen, beschädigte Speicherstände und Wiederherstellung nach gelösten Rätseln.
+- `tests/browser.cjs`: echte Chromium-Interaktion mit dem vollständigen Kapitel, Buchstaben per Drag-and-drop, Hilfen, Neustart, allen Glühwürmchen und drei Bildschirmformaten. Benötigt Playwright 1.51.1 und Chromium. Optional `PLAYWRIGHT_MODULE=/absolute/path/to/playwright node tests/browser.cjs`.
+- `tests/SmokeInstrumentation.java`: reale Android-WebView, gebündelte Assets ohne Verbindung, Kapitelabschluss, Neustart und Erhalt alter Daten bei APK-Update. Ausführbar mit `scripts/run-emulator.sh`.
+- CI: Kapiteltests, Browserprüfungen, nativer APK-Build, Gradle/Lint und Android-Geräteprüfungen auf API 30 und 37.0. Screenshots werden als Prüfarbeitsdateien bereitgestellt.
 
-## Inhalte und Quellen
-
-Alle Illustrationen sind im Projekt gezeichnet und benötigen keine Bilddownloads. Die menschlichen Lautaufnahmen stammen von Wikimedia Commons; Lizenz **CC BY-SA 3.0**. Der Anhang `app/src/main/assets/AUDIO-CREDITS.txt` enthält Urheber, Originalquellen und Bearbeitungen. Er ist im Elternbereich der App lesbar. Vier Konsonanten wurden aus Referenzaufnahmen isoliert, mit Überblendungen verlängert und normalisiert; die Originale und Bearbeitungsschritte sind unter `audio-originals/` und `docs/` dokumentiert. Für einen späteren größeren Lernumfang sollten einheitlich eingesprochene deutsche Lernaufnahmen folgen.
-
-Pädagogische Orientierung für die Lautspiele: LISUM, *Auf die Plätze! Fertig! Los!* (2021), Abschnitt „Wörter lautieren an der Bushaltestelle“: https://bildungsserver.berlin-brandenburg.de/fileadmin/bbb/schule/grundschulportal/Schriftspracherwerb/Lese-Schreibideen_zu_Hause.final.pdf
-
-Das Projekt ist ein spielerisches Ergänzungsangebot. Inhalt und Lernfolge sollten nach den ersten gemeinsamen Testrunden weiter abgestimmt werden.
+Vor einer Freigabe sind die Screenshots visuell sowie Aussprache, Schriftgröße, Berührung und Tempo auf dem Kindergerät zu prüfen. Ein erfolgreicher Build allein belegt diese Qualität nicht.
