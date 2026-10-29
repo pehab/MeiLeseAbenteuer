@@ -121,7 +121,8 @@
   function nila() {
     if (!started || modal || busy) return;
     if (story.phase === 'meeting') dialogue('NILA · DIE STERNENBOTIN', 'Da bist du ja! Diese Sternenpost muss zu Oma ins Baumhaus. Kommst du mit? Taro kennt einen Weg über den Bach.', 'Ich helfe dir', () => { story.advance('accept'); save(); update(); });
-    else dialogue('NILA', story.phase === 'complete' ? 'Du hast die Post gebracht! Schau nur, wie schön es im Baumhaus leuchtet.' : 'Die Sternenpost ist bei dir gut aufgehoben. Ich passe hier auf die übrigen Briefe auf.', 'Weiter', null);
+    else if (story.phase === 'complete') dialogue('NILA', 'Der Waldweg braucht noch Licht. Hilfst du mir, die Klanglaternen zum Leuchten zu bringen?', 'Zu den Klanglaternen', () => lanternJourney.open());
+    else dialogue('NILA', 'Die Sternenpost ist bei dir gut aufgehoben. Ich passe hier auf die übrigen Briefe auf.', 'Weiter', null);
   }
   function frog() {
     if (!started || modal || busy) return;
@@ -248,6 +249,12 @@
     finished() { modal = false; beginStory(); },
     travel(index) { foxX = 450 + index * 180; foxY = 800 - Math.max(0, foxX - 1300) * .3; follow(); }
   });
+  const lanternJourney = createLanternJourney({
+    paintSprite, say, stopSpeech, chime, muted: () => muted,
+    opened() { modal = true; $('ending').hidden = true; update(); },
+    closed() { modal = false; showEnding(); }
+  });
+  $('start-lanterns').onclick = () => { if (story.phase === 'complete' && journey.done) lanternJourney.open(); };
   $('begin').onclick = () => { if (journey.done) beginStory(); else journey.open(); };
   $('rabbit').onclick = nila; $('frog').onclick = frog; $('grandma').onclick = () => { if (started && story.phase === 'complete' && !modal && !busy) showEnding(); };
   $('river-stop').onclick = () => { if (!started || modal || busy) return; if (story.phase === 'meeting') nila(); else moveTo(1120, 820, frog); };
@@ -274,11 +281,11 @@
   $('sound').onclick = () => {
     muted = !muted; $('sound').setAttribute('aria-pressed', String(muted)); $('sound').setAttribute('aria-label', muted ? 'Ton einschalten' : 'Ton ausschalten');
     if (host) host.setMuted(muted); else localStorage.setItem('forest-muted', String(muted));
-    if (muted) { journey.stopAudio(); stopSpeech(); audio?.suspend(); } else { initAudio(); if (lastSpeech) say(lastSpeech); }
+    if (muted) { journey.stopAudio(); lanternJourney.stopAudio(); stopSpeech(); audio?.suspend(); } else { initAudio(); if (lastSpeech) say(lastSpeech); }
   };
   $('grownups').onclick = () => { if (host) host.openParents(); else toast('Die Android-App bietet hier Sprachtest, Updates und einen geschützten Neustart.'); };
-  window.forestBack = () => { if (journey.back()) return true; if (!$('dialogue').hidden) { nextDialogue = null; closeDialogue(); return true; } if (!$('puzzle').hidden) { if (busy) { const action = successAction; successAction = null; busy = false; if (action) action(); } else closePuzzle(); return true; } if (!$('ending').hidden) { $('stay').click(); return true; } return false; };
-  window.forestPaused = value => { paused = value; if (value) { journey.pause(); stopSpeech(); audio?.suspend(); } else { lastFrame = 0; if (!muted) audio?.resume().catch(() => {}); } };
+  window.forestBack = () => { if (lanternJourney.back()) return true; if (journey.back()) return true; if (!$('dialogue').hidden) { nextDialogue = null; closeDialogue(); return true; } if (!$('puzzle').hidden) { if (busy) { const action = successAction; successAction = null; busy = false; if (action) action(); } else closePuzzle(); return true; } if (!$('ending').hidden) { $('stay').click(); return true; } return false; };
+  window.forestPaused = value => { paused = value; if (value) { journey.pause(); lanternJourney.stopAudio(); stopSpeech(); audio?.suspend(); } else { lastFrame = 0; if (!muted) audio?.resume().catch(() => {}); } };
   document.addEventListener('visibilitychange', () => window.forestPaused(document.hidden));
   $('viewport').onpointerdown = e => { if (!started || modal || busy || e.target.closest('button')) return; pan = { x: e.clientX, last: e.clientX, y: e.clientY, camera, moved: false }; $('viewport').setPointerCapture(e.pointerId); };
   $('viewport').onpointermove = e => { if (!pan) return; if (Math.abs(e.clientX - pan.x) > 10) pan.moved = true; if (pan.moved) targetCamera = Math.max(0, Math.min(Math.max(0, 2500 - viewWidth), pan.camera - (e.clientX - pan.x) / scale)); };

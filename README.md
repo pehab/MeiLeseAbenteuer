@@ -10,6 +10,12 @@ Erst nach allen acht Kapiteln startet **Die erste Sternenpost**: Nila übergibt 
 
 Geschaffte Buchstabenkapitel sind über das Blattsymbol wiederholbar. Der Stand wird nach jeder Aufgabe gespeichert. Eine unfertige Schreibform beginnt nach einem Neustart wieder am ersten Strich. Der Wortspielstand und alte Lerndaten bleiben unabhängig davon erhalten. Unter **Für Große** stehen Informationen, Sprachtest, Updates und ein geschützter Neustart bereit.
 
+## Nilas Klanglaternen (0.6.0)
+
+Nach der Sternenpost öffnet **Zu Nilas Klanglaternen** den nächsten Abschnitt. Nila ist auch im Wald wieder ansprechbar. Neun kleine Aufgaben entzünden nach und nach eine Laternenkette: M und A/I/U zunächst als einzelne vorhandene Lautaufnahmen hören und als MA/MI/MU wiederfinden; anschließend LA/LI/LU nach Gehör zuordnen; zuletzt MAMA, OMA und LIMO aus Silbenbausteinen legen. MAMA hat zwei unabhängig wählbare MA-Bausteine. Verbundene Silben und Wörter spricht die deutsche Offline-Stimme. Die Lautfolge ist eine erste Hör- und Verbindungsübung, keine durchgehend eingesprochene Lautverschmelzung.
+
+Hilfen verraten die Verbindung, lösen die Aufgabe aber nicht. Fehler kosten nichts; Wortbausteine lassen sich zurücklegen. Der Stand wird nach jeder gelösten Aufgabe separat gespeichert, bereits vor „Zum nächsten Licht“. Ein Neustart führt zur nächsten offenen Aufgabe; ein unfertiges Wort wird neu gelegt. Android-Zurück, Pause und Stummschalten stoppen die Lautfolge. Die Klanglaternen lassen sich separat wiederholen; nur der geschützte Neustart im Erwachsenenbereich setzt alle drei Abschnitte zurück.
+
 ## Audio
 
 Die vorhandenen Dateien `sounds/a.ogg`, `i.ogg`, `o.ogg`, `u.ogg`, `m.ogg`, `n.ogg` und `l.ogg` sind wieder eingebunden. E und die Erzählung werden mit einer deutschen Geräte-Offlinestimme gesprochen. Bei fehlender Stimme im Elternbereich eine deutsche Offline-Stimme einrichten. Die Lauttaste für Konsonanten verwendet die Aufnahme, nicht den Namen „em“, „en“ oder „el“. Die Dateien stammen unverändert aus der bisherigen App. Die menschlichen Aufnahmen von Denelson83 und Peter Isotalo stehen unter CC BY-SA 3.0; Originalquellen und Bearbeitungen stehen in `app/src/main/assets/AUDIO-CREDITS.txt`, `docs/audio-sources.json` und `docs/audio-adaptations.json`. Die Namensnennung und Lizenz sind auch im Erwachsenenbereich unter „Quellen der Lautaufnahmen“ lesbar.

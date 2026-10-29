@@ -81,6 +81,33 @@ public final class SmokeInstrumentation extends Instrumentation {
         }
         check("8".equals(js("JSON.parse(ForestHost.loadLetters()).completed")), "all letters precede words");
     }
+    private void learnLanterns() throws Exception {
+        click("#start-lanterns"); await("!document.getElementById('lantern').hidden");
+        check("0".equals(js("new ForestLanterns.Lanterns(JSON.parse(ForestHost.loadLanterns())).completed")), "new chapter starts independently");
+        for (int i = 0; i < 9; i++) {
+            check(Integer.toString(i).equals(js("Number(document.getElementById('lantern').dataset.round)")), "lantern round in order");
+            if (i < 6) {
+                js("(() => { const r=ForestLanterns.rounds[" + i + "];document.querySelector('#lantern-options [data-sound=\"'+r.choices.find(v=>v!==r.answer)+'\"]').click(); })()");
+                check(Integer.toString(i).equals(js("new ForestLanterns.Lanterns(JSON.parse(ForestHost.loadLanterns())).completed")), "wrong syllable never lights a lantern");
+                click("#lantern-help");
+                js("(() => { const r=ForestLanterns.rounds[" + i + "];document.querySelector('#lantern-options [data-sound=\"'+r.answer+'\"]').click(); })()");
+            } else {
+                if (i == 6) screenshot("lanterns-native-word.jpg");
+                js("(() => {const r=ForestLanterns.rounds[" + i + "];for(const piece of r.solution)document.querySelector('#lantern-options [data-sound=\"'+piece+'\"]:enabled').click();})()");
+            }
+            check(Integer.toString(i + 1).equals(js("JSON.parse(ForestHost.loadLanterns()).completed")), "lantern persisted before reward Next");
+            if (i == 0) {
+                js("ForestHost.saveLanterns('{\"version\":1,\"completed\":99}')");
+                check("1".equals(js("JSON.parse(ForestHost.loadLanterns()).completed")), "invalid native save preserves last valid progress");
+                check("true".equals(js("window.forestBack()")), "Android Back closes lantern reward safely");
+                click("#start-lanterns");
+            } else click("#lantern-next");
+        }
+        await("!document.getElementById('lantern-finale').hidden"); screenshot("lanterns-native-complete.jpg");
+        click("#lantern-finish");
+        check("8".equals(js("JSON.parse(ForestHost.loadLetters()).completed")), "lanterns preserve learned letters");
+        check("\"complete\"".equals(js("document.getElementById('game').dataset.phase")), "lanterns preserve completed post");
+    }
     private void screenshot(String name) throws Exception {
         CountDownLatch painted = new CountDownLatch(1);
         runOnMainSync(() -> web.postVisualStateCallback(System.nanoTime(), new WebView.VisualStateCallback() {
@@ -116,6 +143,7 @@ public final class SmokeInstrumentation extends Instrumentation {
             if ("reopen".equals(args.getString("phase"))) {
                 check("\"complete\"".equals(js("document.getElementById('game').dataset.phase")), "chapter survives process restart");
                 check("8".equals(js("JSON.parse(ForestHost.loadLetters()).completed")), "letter chapters survive process restart");
+                check("9".equals(js("JSON.parse(ForestHost.loadLanterns()).completed")), "lantern chapter survives process restart");
                 click("#begin"); await("!document.getElementById('ending').hidden");
                 check("true".equals(js("JSON.parse(ForestHost.load()).helped.river")), "help survives process restart");
                 result.putString("summary", "PASS: " + checks + " restart assertions"); finish(Activity.RESULT_OK, result); return;
@@ -138,6 +166,7 @@ public final class SmokeInstrumentation extends Instrumentation {
             for (String letter : new String[]{"O", "M", "A"}) click("[data-letter='" + letter + "']");
             check("\"complete\"".equals(js("document.getElementById('game').dataset.phase")), "Oma receives post");
             click("#success-next"); await("!document.getElementById('ending').hidden"); screenshot("forest-native-ending.jpg");
+            learnLanterns();
             check(getTargetContext().getSharedPreferences("forest-story-v1", 0).edit().commit(), "flush chapter before process death");
             result.putString("summary", "PASS: " + checks + " offline Android chapter assertions"); finish(Activity.RESULT_OK, result);
         } catch (Throwable error) {
