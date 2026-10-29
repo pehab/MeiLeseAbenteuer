@@ -2,4 +2,6 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 node --check app/src/main/assets/forest/forest.js
-node --test tests/story.test.cjs
+node --check app/src/main/assets/forest/letters.js
+node --check app/src/main/assets/forest/lessons-ui.js
+node --test tests/story.test.cjs tests/letters.test.cjs
