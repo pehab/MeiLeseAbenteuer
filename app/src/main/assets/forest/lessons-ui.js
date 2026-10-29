@@ -117,6 +117,8 @@ window.createLetterJourney = function (hooks) {
       b.onclick = () => { lessons.choose(i); persist(); render(); }; $('lesson-map-buttons').append(b);
     });
     $('lesson-to-story').hidden = !lessons.done;
+    $('lesson-repeat-river').hidden = !hooks.canPractice('river');
+    $('lesson-repeat-house').hidden = !hooks.canPractice('house');
     $('lesson-feedback').textContent = lessons.done ? 'Alle acht Buchstaben sind entdeckt. Die Sternenpost wartet!' : 'Jeder neue Buchstabe öffnet einen weiteren Teil deines Weges.';
     speak($('lesson-feedback').textContent);
   }
@@ -134,6 +136,7 @@ window.createLetterJourney = function (hooks) {
   $('lesson-path').onclick = () => { if (map) render(); else showMap(); };
   $('lesson-repeat').onclick = () => { if (!map && ['meet', 'find', 'pair'].includes(lessons.step)) { pair($('letter-pair')); $('letter-meeting').hidden = false; speak('Schau dir den großen und den kleinen Buchstaben an. Die beiden gehören zusammen.'); } else speak(speech); };
   $('letter-sound').onclick = sound;
+  for (const kind of ['river', 'house']) $('lesson-repeat-' + kind).onclick = () => { if (hooks.canPractice(kind)) { close(false); hooks.practice(kind); } };
   $('lesson-to-story').onclick = () => { if (lessons.done) close(true); };
   $('trace-reset').onclick = () => { cancelDemo(); trace = new Trace(lessons.step === 'writeUpper' ? lessons.letter.upperStrokes : lessons.letter.lowerStrokes); drawing = null; drawGuide(); $('lesson-feedback').textContent = 'Beginne am grünen Punkt.'; };
   $('trace-demo').onclick = () => {

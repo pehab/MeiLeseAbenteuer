@@ -113,6 +113,77 @@ const server = http.createServer((req, res) => {
   const save = await page.evaluate(() => JSON.parse(localStorage.getItem('forest-chapter-2')));
   assert.deepEqual([...save.found].sort(), [0, 1, 2]);
   assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('forest-chapter-1')).phase), 'complete', 'the original prototype data stays unchanged');
+  // Continue into the new chapter with the real story and letter gates already completed.
+  await click('#start-lanterns');
+  await page.locator('#lantern').waitFor({ state: 'visible' });
+  await click('#lantern-path'); assert.equal(await page.locator('[data-lantern-task="1"]').isDisabled(), true); await click('[data-lantern-task="0"]');
+  assert.equal(await page.locator('#lantern').getAttribute('data-round'), '0');
+  await page.screenshot({ path: path.join(output, 'lanterns-blending.png') });
+  // Deterministic audio lifecycle: verify recording order and cancellation separately from the reading interaction.
+  await page.evaluate(() => {
+    window.lanternAudio = [];
+    window.Audio = class {
+      constructor(src) { this.src = src; }
+      play() { window.lanternAudio.push(this.src); this.timer = setTimeout(() => this.onended?.(), 250); return Promise.resolve(); }
+      pause() { clearTimeout(this.timer); }
+    };
+  });
+  await click('#lantern-listen');
+  await page.waitForTimeout(650);
+  assert.deepEqual(await page.evaluate(() => window.lanternAudio), ['sounds/m.ogg', 'sounds/a.ogg']);
+  await page.waitForTimeout(100);
+  await page.evaluate(() => { window.lanternAudio = []; });
+  await click('#lantern-listen'); await click('#sound'); await page.waitForTimeout(400);
+  assert.equal(await page.evaluate(() => window.lanternAudio.length), 1, 'muting cancels the second queued phoneme');
+  await click('#sound');
+  const lanternRounds = require('../app/src/main/assets/forest/lanterns.js').rounds;
+  for (const [i, round] of lanternRounds.entries()) {
+    assert.equal(await page.locator('#lantern').getAttribute('data-round'), String(i));
+    const progress = async () => page.evaluate(() => JSON.parse(localStorage.getItem('forest-lanterns-1') || '{"completed":0}').completed);
+    if (i < 6) {
+      const wrong = round.choices.find(text => text !== round.answer);
+      await click(`#lantern-options [data-sound="${wrong}"]`);
+      assert.equal(await progress(), i);
+      await click('#lantern-help'); assert.equal(await progress(), i, 'help never solves a round');
+      await click(`#lantern-options [data-sound="${round.answer}"]`);
+    } else {
+      if (i === 6) {
+        await click('#lantern-options [data-sound="MI"]');
+        await page.locator('#lantern-options [data-sound="MA"]:enabled').first().click();
+        assert.equal(await progress(), i, 'wrong syllables do not complete a word');
+        await click('#lantern-undo'); await click('#lantern-undo');
+        await page.screenshot({ path: path.join(output, 'lanterns-word.png') });
+      }
+      for (const piece of round.solution) await page.locator(`#lantern-options [data-sound="${piece}"]:enabled`).first().click();
+    }
+    assert.equal(await progress(), i + 1);
+    // A solved round is saved before the reward's Next button, including on Android Back.
+    if (i === 1) {
+      await page.reload(); await page.waitForSelector('#game[data-ready=true]');
+      await click('#begin'); await click('#start-lanterns');
+      assert.equal(await page.locator('#lantern').getAttribute('data-round'), '2');
+    } else await click('#lantern-next');
+  }
+  assert.equal(await page.locator('#lantern-finale').isVisible(), true);
+  assert.equal(await page.locator('.sound-lantern.lit').count(), 9);
+  await page.screenshot({ path: path.join(output, 'lanterns-complete.png') });
+  await click('#lantern-finish'); assert.equal(await page.locator('#ending').isVisible(), true);
+  await click('#start-lanterns'); assert.equal(await page.locator('#lantern-map').isVisible(), true);
+  await click('[data-lantern-task="0"]'); assert.equal(await page.locator('#lantern').getAttribute('data-round'), '0');
+  await click('#lantern-options [data-sound="MA"]'); await click('#lantern-next');
+  assert.equal(await page.locator('#lantern-map').isVisible(), true);
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('forest-lanterns-1')).completed), 9, 'individual practice preserves earned lanterns');
+  await page.keyboard.press('Escape'); assert.equal(await page.locator('#ending').isVisible(), true);
+  assert.equal(await phase(), 'complete');
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('forest-letters-1')).completed), 8, 'replaying lanterns preserves the earlier chapters');
+  await click('#stay'); await click('#chapter');
+  const storyBeforePractice = await page.evaluate(() => localStorage.getItem('forest-chapter-2'));
+  await click('#lesson-repeat-river'); await click('#help'); await click('[data-choice=lemonade]'); await click('#success-next');
+  assert.equal(await page.evaluate(() => localStorage.getItem('forest-chapter-2')), storyBeforePractice);
+  await click('#stay'); await click('#chapter'); await click('#lesson-repeat-house');
+  for (const letter of ['O', 'M', 'A']) await click(`[data-letter=${letter}]`);
+  await click('#success-next');
+  assert.equal(await page.evaluate(() => localStorage.getItem('forest-chapter-2')), storyBeforePractice, 'individual story practice preserves phase, help and discoveries');
   await context.close();
   for (const [width, height, label] of [[844, 390, 'phone'], [1024, 768, 'tablet'], [390, 844, 'portrait']]) {
     const { page: p, context: c } = await game(width, height, { version: 1, phase: 'treehouse', found: [], helped: {} });
@@ -120,7 +191,21 @@ const server = http.createServer((req, res) => {
     const box = await p.locator('#puzzle').boundingBox(); assert.ok(box.x >= 0 && box.y >= 0 && box.x + box.width <= width + 1 && box.y + box.height <= height + 1, 'puzzle stays in the viewport');
     await p.screenshot({ path: path.join(output, `forest-${label}.png`) });
     for (const letter of ['O', 'M', 'A']) await p.locator(`[data-letter=${letter}]`).click();
-    assert.equal(await p.locator('#game').getAttribute('data-phase'), 'complete'); await c.close();
+    assert.equal(await p.locator('#game').getAttribute('data-phase'), 'complete');
+    await p.locator('#success-next').click(); await p.locator('#start-lanterns').click();
+    for (const completed of [0, 3, 6, 9]) {
+      await p.evaluate(value => localStorage.setItem('forest-lanterns-1', JSON.stringify({ version: 1, completed: value })), completed);
+      await p.reload(); await p.waitForSelector('#game[data-ready=true]'); await p.locator('#begin').click(); await p.locator('#start-lanterns').click();
+      const panel = await p.locator('#lantern').boundingBox();
+      assert.equal(await p.locator('#lantern').evaluate(e => e.scrollHeight <= e.clientHeight + 1), true, 'the complete lantern panel fits without hiding its back button');
+      assert.ok(panel.x >= 0 && panel.y >= 0 && panel.x + panel.width <= width + 1 && panel.y + panel.height <= height + 1);
+      for (const id of completed === 9 ? ['lantern-path'] : ['lantern-listen', 'lantern-help']) {
+        const control = p.locator('#' + id); await control.scrollIntoViewIfNeeded();
+        const bounds = await control.boundingBox(); assert.ok(bounds.y >= panel.y && bounds.y + bounds.height <= panel.y + panel.height + 1, 'lantern controls remain reachable inside their panel');
+      }
+      if (completed === 6) await p.screenshot({ path: path.join(output, `lanterns-${label}.png`) });
+    }
+    await c.close();
   }
   for (const [width, height, label] of [[844, 390, 'phone'], [390, 844, 'portrait']]) {
     const { page: p, context: c } = await game(width, height);
@@ -152,5 +237,5 @@ const server = http.createServer((req, res) => {
   }
   assert.deepEqual(errors, [], 'no uncaught JavaScript errors');
   await browser.close(); await new Promise(resolve => server.close(resolve));
-  console.log('PASS: all eight letters, real pointer writing of both cases, locked chapters, restart, three screen sizes and the complete word story');
+  console.log('PASS: nine lantern rounds, duplicate syllables, audio cancellation, three new layouts, all eight letters, real pointer writing of both cases, locked chapters, restart, three screen sizes and the complete word story');
 })().catch(error => { console.error(error); server.close(); process.exit(1); });

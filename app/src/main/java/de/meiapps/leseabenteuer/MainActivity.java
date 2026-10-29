@@ -147,22 +147,22 @@ public final class MainActivity extends Activity {
     private void parentSettings() {
         inParents = true; updates.resume();
         AlertDialog menu = new AlertDialog.Builder(this).setTitle("MeiLeseAbenteuer · Für Große")
-                .setItems(new String[]{"Buchstabenpfad · acht erste Buchstaben", voiceReady ? "Deutsche Offline-Stimme testen" : "Deutsche Offline-Stimme einrichten", "Updates", "Buchstabenpfad und Sternenpost neu beginnen", "Quellen der Lautaufnahmen"}, null)
+                .setItems(new String[]{"Buchstabenpfad · acht erste Buchstaben", voiceReady ? "Deutsche Offline-Stimme testen" : "Deutsche Offline-Stimme einrichten", "Updates", "Alle Waldabenteuer neu beginnen", "Quellen der Lautaufnahmen"}, null)
                 .setNegativeButton("Zurück in den Wald", null).create();
         menu.setOnDismissListener(d -> { inParents = false; updates.pause(); });
         menu.show();
         // Keep the gated menu open underneath subdialogs and the update/install flow.
         menu.getListView().setOnItemClickListener((parent, row, n, id) -> {
                     if (n == 0) new AlertDialog.Builder(this).setTitle("Der Buchstabenwald")
-                            .setMessage("Acht kurze Waldkapitel führen A, E, I, O, U, M, N und L ein: Laute hören, Groß- und Kleinbuchstaben erkennen und beide Formen mit Startpunkten nachfahren. Die kleine a-Form ist einstöckig. Das ist eine erste Formübung, noch keine freie Handschrifterkennung. Die vorhandenen sieben Lautaufnahmen werden offline verwendet; E und die Erzählung nutzen die deutsche Offline-Stimme. Erst nach dem Buchstabenpfad folgt die Sternenpost mit LIMO und OMA. Buchstabenpfad und Sternenpost werden getrennt gespeichert. Alte Lernstände bleiben erhalten.")
+                            .setMessage("Acht kurze Waldkapitel führen A, E, I, O, U, M, N und L ein: Laute hören, Groß- und Kleinbuchstaben erkennen und beide Formen mit Startpunkten nachfahren. Die kleine a-Form ist einstöckig. Das ist eine erste Formübung, noch keine freie Handschrifterkennung. Die vorhandenen sieben Lautaufnahmen werden offline verwendet; E und die Erzählung nutzen die deutsche Offline-Stimme. Erst nach dem Buchstabenpfad folgt die Sternenpost mit LIMO und OMA. Nach der Sternenpost folgen Nilas Klanglaternen: MA, MI, MU, LA, LI und LU hören und verbinden, dann MAMA, OMA und LIMO aus Bausteinen legen. Alle drei Abschnitte werden getrennt gespeichert. Alte Lernstände bleiben erhalten.")
                             .setPositiveButton("Verstanden", null).show();
                     else if (n == 1) {
                         if (voiceReady) speak("Willkommen im Geschichtenwald. Nila möchte die Sternenpost zum Baumhaus bringen.");
                         else try { startActivity(new Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA)); }
                         catch (android.content.ActivityNotFoundException e) { Toast.makeText(this, "Bitte eine deutsche Offline-Stimme in den Android-Spracheinstellungen installieren.", Toast.LENGTH_LONG).show(); }
                     } else if (n == 2) updates.settings();
-                    else if (n == 3) new AlertDialog.Builder(this).setTitle("Waldabschnitt neu beginnen?").setMessage("Die acht Buchstabenkapitel, die Sternenpost und die drei Glühwürmchen beginnen von vorn.")
-                            .setNegativeButton("Abbrechen", null).setPositiveButton("Neu beginnen", (x, y) -> { preferences.edit().remove("chapter-after-letters").remove("letters").apply(); web.reload(); }).show();
+                    else if (n == 3) new AlertDialog.Builder(this).setTitle("Waldabschnitt neu beginnen?").setMessage("Die acht Buchstabenkapitel, die Sternenpost, die Glühwürmchen und Nilas Klanglaternen beginnen von vorn.")
+                            .setNegativeButton("Abbrechen", null).setPositiveButton("Neu beginnen", (x, y) -> { preferences.edit().remove("chapter-after-letters").remove("letters").remove("lanterns").apply(); web.reload(); }).show();
                     else new AlertDialog.Builder(this).setTitle("Lautaufnahmen · CC BY-SA 3.0").setMessage(audioCredits()).setPositiveButton("Zurück", null).show();
                 });
     }
@@ -175,6 +175,21 @@ public final class MainActivity extends Activity {
         } catch (IOException ignored) { return "Die Quellenangaben konnten nicht geladen werden."; }
     }
     final class ForestBridge {
+        @JavascriptInterface public String loadLanterns() { return preferences.getString("lanterns", "{}"); }
+        @JavascriptInterface public void saveLanterns(String value) {
+            if (value == null || value.length() > 1024) return;
+            try {
+                JSONObject input = new JSONObject(value);
+                Object raw = input.get("completed");
+                if (!(raw instanceof Integer) || input.optInt("version") != 1) return;
+                int completed = (Integer) raw;
+                Object rawIndex = input.has("index") ? input.get("index") : raw;
+                if (!(rawIndex instanceof Integer)) return;
+                int index = (Integer) rawIndex;
+                if (completed < 0 || completed > 9 || index < 0 || index > completed) return;
+                preferences.edit().putString("lanterns", new JSONObject().put("version", 1).put("completed", completed).put("index", index).toString()).apply();
+            } catch (JSONException ignored) { /* Keep the last valid lantern save. */ }
+        }
         @JavascriptInterface public String loadLetters() { return preferences.getString("letters", "{}"); }
         @JavascriptInterface public void saveLetters(String value) {
             if (value == null || value.length() > 1024) return;

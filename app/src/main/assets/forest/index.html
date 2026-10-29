@@ -29,7 +29,7 @@
   </div>
   <div class="vignette" aria-hidden="true"></div>
   <header id="hud">
-    <button id="chapter" aria-label="Zur eigenen Figur zurückkehren"><span class="chapter-leaf">❧</span><span><small>MEILESEABENTEUER</small><strong>Der Buchstabenwald</strong></span></button>
+    <button id="chapter" aria-label="Buchstaben und erledigte Aufgaben auswählen"><span class="chapter-leaf">❧</span><span><small>MEILESEABENTEUER</small><strong>Der Buchstabenwald</strong></span></button>
     <nav aria-label="Einstellungen"><button id="sound" class="round" aria-label="Ton ausschalten" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zM16 8q5 4 0 8M19 5q7 7 0 14"/></svg></button><button id="grownups" class="round" aria-label="Für Große"><svg viewBox="0 0 24 24"><path d="M9 11V7a3 3 0 0 1 6 0v4M6 11h12v10H6z"/></svg></button></nav>
   </header>
   <section id="intro" aria-label="Beginn des Abenteuers">
@@ -73,15 +73,29 @@
         <div id="letter-finding" hidden><div id="letter-model"></div><div id="letter-options" role="group" aria-label="Finde den passenden Buchstaben"></div></div>
         <div id="letter-writing" hidden><div class="trace-caption"><strong id="trace-label"></strong><span id="trace-count"></span></div><svg id="trace-board" viewBox="0 0 300 230" aria-label="Buchstaben mit dem Finger nachfahren" role="img"></svg><div class="trace-tools"><button id="trace-demo" class="text-button">▷ Zeig es mir</button><button id="trace-reset" class="text-button">↶ Noch einmal</button></div></div>
         <div id="letter-reward" hidden><div class="letter-spark">✦</div><div id="reward-pair"></div><h3>Dein Buchstabe leuchtet!</h3><p id="letter-reward-text"></p></div>
-        <div id="lesson-map" hidden><h3>Dein Buchstabenpfad</h3><p>Tippe auf einen offenen Buchstaben. Du kannst ihn noch einmal entdecken.</p><div id="lesson-map-buttons"></div><button id="lesson-to-story" class="primary" hidden>Zur Sternenpost <span>➜</span></button></div>
+        <div id="lesson-map" hidden><h3>Dein Buchstabenpfad</h3><p>Tippe auf einen offenen Buchstaben. Du kannst ihn noch einmal entdecken.</p><div id="lesson-map-buttons"></div><div class="story-practice-buttons"><button id="lesson-repeat-river" class="text-button" hidden>Taros Wunschzettel üben</button><button id="lesson-repeat-house" class="text-button" hidden>Omas Brief üben</button></div><button id="lesson-to-story" class="primary" hidden>Zur Sternenpost <span>➜</span></button></div>
       </div>
     </div>
     <div class="lesson-bottom"><p id="lesson-feedback" role="status" aria-live="polite"></p><button id="lesson-next" class="primary">Los geht’s <span>➜</span></button></div>
   </section>
-  <section id="ending" hidden aria-label="Kapitel abgeschlossen"><div class="eyebrow">DIE ERSTE STERNENPOST</div><div class="end-stars">✧ ✦ ✧</div><h1>Ein Licht<br>für <em>Oma.</em></h1><p>Die Post ist angekommen.<br>Und im Baumhaus wird es hell.</p><p class="end-discoveries"></p><button id="stay" class="primary">Noch im Wald bleiben <span>❧</span></button><button id="replay" class="text-button">Das Abenteuer noch einmal spielen</button></section>
+  <section id="ending" hidden aria-label="Kapitel abgeschlossen"><div class="eyebrow">DIE ERSTE STERNENPOST</div><div class="end-stars">✧ ✦ ✧</div><h1>Ein Licht<br>für <em>Oma.</em></h1><p>Die Post ist angekommen.<br>Und im Baumhaus wird es hell.</p><p class="end-discoveries"></p><button id="start-lanterns" class="primary">Zu Nilas Klanglaternen <span>➜</span></button><button id="stay" class="primary">Noch im Wald bleiben <span>❧</span></button><button id="replay" class="text-button">Das Abenteuer noch einmal spielen</button></section>
+  <section id="lantern" hidden aria-label="Nilas Klanglaternen">
+    <div class="lesson-top"><button id="lantern-back" class="round" aria-label="Zurück zum Baumhaus">‹</button><div><small>NILAS KLANGLATERNEN</small><h2 id="lantern-title">Ein Licht für den Waldweg</h2></div><button id="lantern-path" class="round" aria-label="Klanglaternen zum Üben auswählen">❧</button><canvas id="lantern-nila" aria-label="Nila begleitet dich"></canvas></div>
+    <div id="lantern-lights" role="group" aria-label="Deine Klanglaternen"></div><p id="lantern-count" role="status"></p>
+    <div id="lantern-activity">
+      <p id="lantern-instruction"></p><div id="lantern-sounds" aria-label="Die beiden Laute"></div>
+      <button id="lantern-listen" class="help-button">♫ Lautweg hören</button>
+      <div id="lantern-slots" role="group" aria-label="Dein Wort aus Bausteinen"></div>
+      <div id="lantern-options" role="group" aria-label="Wähle die passenden Bausteine"></div>
+      <button id="lantern-undo" class="text-button">↶ Letzten Baustein zurücklegen</button>
+      <div class="lantern-bottom"><button id="lantern-help" class="help-button">✧ Hilf mir</button><p id="lantern-feedback" role="status" aria-live="polite"></p><button id="lantern-next" class="primary" hidden>Zum nächsten Licht ➜</button></div>
+    </div>
+    <div id="lantern-map" hidden><p>Tippe auf eine leuchtende Aufgabe zum Üben.<br>Deine Laternen bleiben erhalten.</p><div id="lantern-map-options" role="group" aria-label="Erledigte und nächste Klanglaternen-Aufgaben"></div></div>
+    <div id="lantern-finale" hidden><div class="end-stars">✧ ✦ ✧</div><h2>Ein heller Weg für alle!</h2><p>Du hast Laute verbunden und Wörter gebaut.<br>Nila freut sich über jede deiner Laternen.</p><button id="lantern-finish" class="primary">Zurück ins Baumhaus ❧</button><button id="lantern-replay" class="text-button">Aufgaben noch einmal üben</button></div>
+  </section>
   <div id="toast" role="status" aria-live="polite"></div>
   <div id="loading">Der Geschichtenwald erwacht …</div>
 </main>
-<script src="story.js"></script><script src="letters.js"></script><script src="lessons-ui.js"></script><script src="forest.js"></script>
+<script src="story.js"></script><script src="letters.js"></script><script src="lessons-ui.js"></script><script src="lanterns.js"></script><script src="lanterns-ui.js"></script><script src="forest.js"></script>
 </body>
 </html>
